@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, ShoppingCart, DollarSign } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { DateRangePicker } from '../common/DateRangePicker';
 
 interface AnalyticsData {
     totalRevenue: number;
     totalOrders: number;
+    averageOrderValue: number;
     salesOverTime: { name: string; value: number }[];
     topProducts: { id: string; title: string; totalSales: number }[];
 }
@@ -39,9 +41,13 @@ export const Analytics = () => {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [dateRange, setDateRange] = useState({
-        start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
-        end: new Date().toISOString().split('T')[0]
+    const [dateRange, setDateRange] = useState(() => {
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        return {
+            start: firstDayOfMonth.toISOString().split('T')[0],
+            end: today.toISOString().split('T')[0]
+        };
     });
 
     useEffect(() => {
@@ -94,21 +100,10 @@ export const Analytics = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Analytics: {selectedStore.name}</h1>
-                <div className="flex items-center gap-2 bg-card border border-border p-1 rounded-lg shadow-sm">
-                    <input
-                        type="date"
-                        value={dateRange.start}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                        className="bg-transparent border-none text-sm focus:ring-0 text-foreground p-2 outline-none"
-                    />
-                    <span className="text-muted-foreground">-</span>
-                    <input
-                        type="date"
-                        value={dateRange.end}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                        className="bg-transparent border-none text-sm focus:ring-0 text-foreground p-2 outline-none"
-                    />
-                </div>
+                <DateRangePicker
+                    value={dateRange}
+                    onChange={setDateRange}
+                />
             </div>
 
             {isLoading && (
@@ -136,11 +131,12 @@ export const Analytics = () => {
                             icon={ShoppingCart}
                         />
 
+
                         <MetricCard
-                            title="Conversion Rate"
-                            value="-"
+                            title="Average Order Value"
+                            value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             change={null}
-                            icon={TrendingUp}
+                            icon={DollarSign}
                         />
                     </div>
 
@@ -179,30 +175,60 @@ export const Analytics = () => {
                             </div>
                         </div>
 
-                        {/* Secondary Chart */}
+                        {/* Top Products */}
                         <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                             <h3 className="text-lg font-semibold mb-6">Top Products</h3>
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {(!data?.topProducts || data.topProducts.length === 0) ? (
-                                    <p className="text-muted-foreground text-sm">No products found.</p>
-                                ) : (
-                                    data.topProducts.map((product) => (
-                                        <div key={product.id} className="flex items-center justify-between p-3 hover:bg-secondary/50 rounded-lg transition-colors cursor-pointer group">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-xs font-bold text-muted-foreground group-hover:bg-background transition-colors">
-                                                    {product.title.substring(0, 2).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-sm truncate max-w-[120px]" title={product.title}>{product.title}</p>
-                                                    <p className="text-xs text-muted-foreground">Product</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-medium text-sm">${product.totalSales.toLocaleString()}</p>
-                                                {/* <p className="text-xs text-green-500">+12%</p> */}
-                                            </div>
+                                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                                        <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mb-3">
+                                            <ShoppingCart className="w-8 h-8 text-muted-foreground" />
                                         </div>
-                                    ))
+                                        <p className="text-muted-foreground text-sm">No products found</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Try selecting a different date range</p>
+                                    </div>
+                                ) : (
+                                    data.topProducts.map((product, index) => {
+                                        const maxSales = data.topProducts[0]?.totalSales || 1;
+                                        const percentage = (product.totalSales / maxSales) * 100;
+                                        const rankColors = ['bg-yellow-500', 'bg-gray-400', 'bg-orange-600'];
+                                        const rankColor = rankColors[index] || 'bg-primary';
+
+                                        return (
+                                            <div key={product.id} className="relative group">
+                                                <div className="flex items-center gap-3 p-3 hover:bg-secondary/30 rounded-lg transition-all cursor-pointer">
+                                                    {/* Rank Badge */}
+                                                    <div className={`w-6 h-6 ${rankColor} rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                                                        {index + 1}
+                                                    </div>
+
+                                                    {/* Product Info */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm truncate" title={product.title}>
+                                                            {product.title}
+                                                        </p>
+                                                        {/* Progress Bar */}
+                                                        <div className="mt-1.5 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-primary transition-all duration-500 rounded-full"
+                                                                style={{ width: `${percentage}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Sales Amount */}
+                                                    <div className="text-right flex-shrink-0">
+                                                        <p className="font-semibold text-sm">
+                                                            ${product.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {percentage.toFixed(0)}%
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                                 )}
                             </div>
                         </div>
