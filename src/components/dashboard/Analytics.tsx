@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
 import { TrendingUp, ShoppingCart, DollarSign } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { DateRangePicker } from '../common/DateRangePicker';
@@ -96,6 +95,43 @@ export const Analytics = () => {
         );
     }
 
+    const getGradientOffsets = () => {
+        if (!selectedStore?.startDate || !selectedStore?.endDate || !data?.salesOverTime?.length) {
+            return { start: 0, end: 0, startIndex: -1, endIndex: -1 };
+        }
+
+        const dataLength = data.salesOverTime.length;
+        if (dataLength < 2) return { start: 0, end: 0, startIndex: -1, endIndex: -1 };
+
+        const viewStart = new Date(dateRange.start).getTime();
+        const viewEnd = new Date(dateRange.end).getTime();
+        const refStart = new Date(selectedStore.startDate).getTime();
+        const refEnd = new Date(selectedStore.endDate).getTime();
+
+        if (isNaN(refStart) || isNaN(refEnd)) return { start: 0, end: 0, startIndex: -1, endIndex: -1 };
+
+        const totalDuration = viewEnd - viewStart;
+        if (totalDuration <= 0) return { start: 0, end: 0, startIndex: -1, endIndex: -1 };
+
+        const startPercentTime = (refStart - viewStart) / totalDuration;
+        const endPercentTime = (refEnd - viewStart) / totalDuration;
+
+        let startIndex = Math.floor(startPercentTime * (dataLength - 1));
+        let endIndex = Math.floor(endPercentTime * (dataLength - 1));
+
+        // Clamp indices
+        startIndex = Math.max(0, Math.min(dataLength - 1, startIndex));
+        endIndex = Math.max(0, Math.min(dataLength - 1, endIndex));
+
+        // Calculate offsets based on INDICES to align with the dots/grid
+        const startOffset = startIndex / (dataLength - 1);
+        const endOffset = endIndex / (dataLength - 1);
+
+        return { start: startOffset, end: endOffset, startIndex, endIndex };
+    };
+
+    const gradientInfo = getGradientOffsets();
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -130,8 +166,6 @@ export const Analytics = () => {
                             change={null}
                             icon={ShoppingCart}
                         />
-
-
                         <MetricCard
                             title="Average Order Value"
                             value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -149,10 +183,39 @@ export const Analytics = () => {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={data?.salesOverTime ?? []}>
                                         <defs>
+                                            {/* Original Primary Gradient (Vertical Fade) */}
                                             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                                                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                                             </linearGradient>
+
+                                            {/* Blue Gradient for Reference Period (Vertical Fade) */}
+                                            <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
+                                            </linearGradient>
+
+                                            {/* Stroke Gradient (Horizontal Switch) */}
+                                            <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                                                <stop offset={`${(gradientInfo.start * 100)}%`} stopColor="hsl(var(--primary))" />
+                                                <stop offset={`${(gradientInfo.start * 100)}%`} stopColor="#38bdf8" />
+                                                <stop offset={`${(gradientInfo.end * 100)}%`} stopColor="#38bdf8" />
+                                                <stop offset={`${(gradientInfo.end * 100)}%`} stopColor="hsl(var(--primary))" />
+                                            </linearGradient>
+
+                                            {/* Mask to show Blue Gradient only in reference period */}
+                                            <mask id="highlightMask" x="0" y="0" width="100%" height="100%">
+                                                {/* Everything black (hidden) by default */}
+                                                <rect x="0" y="0" width="100%" height="100%" fill="black" />
+                                                {/* White rect (visible) for the reference period */}
+                                                <rect
+                                                    x={`${gradientInfo.start * 100}%`}
+                                                    y="0"
+                                                    width={`${(gradientInfo.end - gradientInfo.start) * 100}%`}
+                                                    height="100%"
+                                                    fill="white"
+                                                />
+                                            </mask>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                                         <XAxis
@@ -161,7 +224,6 @@ export const Analytics = () => {
                                             fontSize={12}
                                             tickLine={false}
                                             axisLine={false}
-                                            padding={{ left: 20, right: 20 }}
                                             minTickGap={30}
                                         />
                                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
@@ -169,7 +231,49 @@ export const Analytics = () => {
                                             contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                             itemStyle={{ color: 'hsl(var(--foreground))' }}
                                         />
-                                        <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
+
+                                        {/* Main Area (Primary Color) */}
+                                        <Area
+                                            type="monotone"
+                                            dataKey="value"
+                                            stroke="url(#strokeGradient)"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorValue)"
+                                            isAnimationActive={false}
+                                        />
+
+                                        {/* Highlight Area (Blue Color, Masked) */}
+                                        <Area
+                                            type="monotone"
+                                            dataKey="value"
+                                            stroke="none"
+                                            fillOpacity={1}
+                                            fill="url(#blueGradient)"
+                                            mask="url(#highlightMask)"
+                                            isAnimationActive={false}
+                                        />
+
+                                        {gradientInfo.startIndex !== -1 && data?.salesOverTime[gradientInfo.startIndex] && (
+                                            <ReferenceDot
+                                                x={data.salesOverTime[gradientInfo.startIndex].name}
+                                                y={data.salesOverTime[gradientInfo.startIndex].value}
+                                                r={5}
+                                                fill="#38bdf8"
+                                                stroke="white"
+                                                strokeWidth={2}
+                                            />
+                                        )}
+                                        {gradientInfo.endIndex !== -1 && data?.salesOverTime[gradientInfo.endIndex] && (
+                                            <ReferenceDot
+                                                x={data.salesOverTime[gradientInfo.endIndex].name}
+                                                y={data.salesOverTime[gradientInfo.endIndex].value}
+                                                r={5}
+                                                fill="#38bdf8"
+                                                stroke="white"
+                                                strokeWidth={2}
+                                            />
+                                        )}
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>

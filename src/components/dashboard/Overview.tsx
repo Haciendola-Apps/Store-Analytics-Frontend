@@ -61,9 +61,9 @@ export const Overview = () => {
             </div>
 
             <div className="bg-card border border-border rounded-xl p-8 text-center space-y-4">
-                <h3 className="text-lg font-semibold">Welcome to ShopifyHub</h3>
+                <h3 className="text-lg font-semibold">Bienvenido a Hagamos Ecommerce Analytics</h3>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Select a store from the top menu or go to the <strong>Analytics</strong> tab to view detailed performance metrics for a specific store.
+                    Selecciona una tienda desde el menu superior o ve a la pestaña <strong>Analytics</strong> para ver los detalles de las metricas de una tienda en particular.
                 </p>
             </div>
         </div>

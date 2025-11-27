@@ -38,7 +38,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                                 <BarChart3 className="text-primary-foreground" size={20} />
                             </div>
-                            <h1 className="text-xl font-bold tracking-tight">ShopifyHub</h1>
+                            <h1 className="text-xl font-bold tracking-tight">Hagamos Ecommerce</h1>
                         </div>
 
                         <nav className="space-y-1">
