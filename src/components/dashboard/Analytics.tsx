@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
 import { TrendingUp, ShoppingCart, DollarSign } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { DateRangePicker } from '../common/DateRangePicker';
+import { useDateRange } from '../../context/DateRangeContext';
 
 interface AnalyticsData {
     totalRevenue: number;
@@ -37,17 +37,10 @@ const MetricCard = ({ title, value, change, icon: Icon }: any) => (
 
 export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
+    const { dateRange } = useDateRange();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [dateRange, setDateRange] = useState(() => {
-        const today = new Date();
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        return {
-            start: firstDayOfMonth.toISOString().split('T')[0],
-            end: today.toISOString().split('T')[0]
-        };
-    });
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -136,10 +129,6 @@ export const Analytics = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Analytics: {selectedStore.name}</h1>
-                <DateRangePicker
-                    value={dateRange}
-                    onChange={setDateRange}
-                />
             </div>
 
             {isLoading && (

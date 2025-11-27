@@ -21,10 +21,13 @@ const SidebarItem = ({ icon: Icon, label, to, active }: { icon: any, label: stri
 
 import { StoreProvider } from '../../context/StoreContext';
 import { StoreSelector } from '../store/StoreSelector';
+import { DateRangePicker } from '../common/DateRangePicker';
+import { useDateRange } from '../../context/DateRangeContext';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
     const [isStoreManagerOpen, setIsStoreManagerOpen] = useState(false);
+    const { dateRange, setDateRange } = useDateRange();
 
     return (
         <StoreProvider>
@@ -64,13 +67,16 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                             <h2 className="text-lg font-semibold">Dashboard</h2>
                             <StoreSelector />
                         </div>
-                        <button
-                            onClick={() => setIsStoreManagerOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium shadow-lg shadow-primary/20"
-                        >
-                            <Plus size={16} />
-                            Add Store
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <DateRangePicker value={dateRange} onChange={setDateRange} />
+                            <button
+                                onClick={() => setIsStoreManagerOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium shadow-lg shadow-primary/20"
+                            >
+                                <Plus size={16} />
+                                Add Store
+                            </button>
+                        </div>
                     </header>
                     <div className="p-8 max-w-7xl mx-auto">
                         {children}
