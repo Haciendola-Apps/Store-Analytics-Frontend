@@ -8,42 +8,53 @@ interface AnalyticsData {
     totalRevenue: number;
     totalOrders: number;
     averageOrderValue: number;
+    totalSessions: number;
+    conversionRate: number;
+    comparison: {
+        totalRevenueChange: number | null;
+        totalOrdersChange: number | null;
+        averageOrderValueChange: number | null;
+        totalSessionsChange: number | null;
+        conversionRateChange: number | null;
+    } | null;
     salesOverTime: { name: string; value: number }[];
     topProducts: { id: string; title: string; totalSales: number }[];
 }
 
-interface SessionMetrics {
-    sessions: { date: string; sessions: number; conversionRate: number | null }[];
-}
 
-const MetricCard = ({ title, value, change, icon: Icon }: any) => (
-    <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-            <span className="text-muted-foreground text-sm font-medium">{title}</span>
-            <div className="p-2 bg-primary/10 rounded-lg">
-                <Icon size={18} className="text-primary" />
+const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon }: any) => {
+    const isNeutral = change === null || Math.abs(change) < 0.1;
+    const isPositive = change !== null && change > 0;
+    const colorClass = isNeutral ? 'text-foreground/70' : (isPositive ? 'text-green-500' : 'text-red-500');
+
+    return (
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+                <span className="text-muted-foreground text-sm font-medium">{title}</span>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                    <Icon size={18} className="text-primary" />
+                </div>
+            </div>
+            <div className="flex items-end justify-between">
+                <div>
+                    <h3 className="text-2xl font-bold text-foreground">{value}</h3>
+                    {change != null && (
+                        <div className={`flex items-center gap-1 mt-1 text-sm ${colorClass} font-medium`}>
+                            {change > 0 ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />}
+                            <span>{change > 0 ? '+' : ''}{parseFloat(change.toString()).toFixed(1)}%</span>
+                            <span className="text-muted-foreground ml-1 text-xs">vs {comparisonLabel}</span>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
-        <div className="flex items-end justify-between">
-            <div>
-                <h3 className="text-2xl font-bold text-foreground">{value}</h3>
-                {change && (
-                    <div className="flex items-center gap-1 mt-1 text-sm text-green-500 font-medium">
-                        <TrendingUp size={14} />
-                        <span>{change}</span>
-                        <span className="text-muted-foreground ml-1">vs last month</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    </div>
-);
+    );
+};
 
 export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
-    const { dateRange } = useDateRange();
+    const { dateRange, comparisonPeriod, setComparisonPeriod } = useDateRange();
     const [data, setData] = useState<AnalyticsData | null>(null);
-    const [sessionMetrics, setSessionMetrics] = useState<SessionMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +67,8 @@ export const Analytics = () => {
             try {
                 const queryParams = new URLSearchParams({
                     startDate: dateRange.start,
-                    endDate: dateRange.end
+                    endDate: dateRange.end,
+                    comparisonPeriod: comparisonPeriod
                 });
 
                 // Fetch analytics data
@@ -67,12 +79,6 @@ export const Analytics = () => {
                 const result = await response.json();
                 setData(result);
 
-                // Fetch session metrics
-                const sessionResponse = await fetch(`http://localhost:3000/analytics/${selectedStore.id}/sessions?${queryParams}`);
-                if (sessionResponse.ok) {
-                    const sessionResult = await sessionResponse.json();
-                    setSessionMetrics(sessionResult);
-                }
             } catch (err) {
                 console.error('Error fetching analytics:', err);
                 setError('Failed to load analytics data');
@@ -82,7 +88,7 @@ export const Analytics = () => {
         };
 
         fetchAnalytics();
-    }, [selectedStore, dateRange]);
+    }, [selectedStore, dateRange, comparisonPeriod]);
 
     if (isStoreLoading) {
         return <div className="flex items-center justify-center h-64">Loading analytics...</div>;
@@ -139,19 +145,25 @@ export const Analytics = () => {
 
     const gradientInfo = getGradientOffsets();
 
-    // Calculate session metrics
-    const totalSessions = sessionMetrics?.sessions.reduce((sum, m) => sum + m.sessions, 0) || 0;
-    const avgConversionRate = sessionMetrics?.sessions.length
-        ? (sessionMetrics.sessions
-            .filter(m => m.conversionRate !== null)
-            .reduce((sum, m) => sum + (m.conversionRate || 0), 0) /
-            sessionMetrics.sessions.filter(m => m.conversionRate !== null).length) * 100
-        : 0;
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Analytics: {selectedStore.name}</h1>
+
+                <div className="flex items-center gap-3 bg-card border border-border p-1 rounded-lg">
+                    <span className="text-xs font-medium text-muted-foreground px-2">Compare with:</span>
+                    <select
+                        value={comparisonPeriod}
+                        onChange={(e) => setComparisonPeriod(e.target.value as any)}
+                        className="bg-transparent text-sm font-medium focus:outline-none pr-2"
+                    >
+                        <option value="none">None</option>
+                        <option value="previous_period">Previous Period</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="last_year">Last Year</option>
+                    </select>
+                </div>
             </div>
 
             {isLoading && (
@@ -169,31 +181,36 @@ export const Analytics = () => {
                         <MetricCard
                             title="Total Revenue"
                             value={`$${(data?.totalRevenue ?? 0).toLocaleString()}`}
-                            change={null}
+                            change={data?.comparison?.totalRevenueChange}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'prev. period' : comparisonPeriod.replace('_', ' ')}
                             icon={DollarSign}
                         />
                         <MetricCard
                             title="Total Orders"
                             value={(data?.totalOrders ?? 0).toLocaleString()}
-                            change={null}
+                            change={data?.comparison?.totalOrdersChange}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'prev. period' : comparisonPeriod.replace('_', ' ')}
                             icon={ShoppingCart}
                         />
                         <MetricCard
                             title="Average Order Value"
                             value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                            change={null}
+                            change={data?.comparison?.averageOrderValueChange}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'prev. period' : comparisonPeriod.replace('_', ' ')}
                             icon={DollarSign}
                         />
                         <MetricCard
                             title="Total Sessions"
-                            value={totalSessions.toLocaleString()}
-                            change={null}
+                            value={(data?.totalSessions ?? 0).toLocaleString()}
+                            change={data?.comparison?.totalSessionsChange}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'prev. period' : comparisonPeriod.replace('_', ' ')}
                             icon={Activity}
                         />
                         <MetricCard
                             title="Conversion Rate"
-                            value={`${avgConversionRate.toFixed(2)}%`}
-                            change={null}
+                            value={`${(data?.conversionRate ?? 0).toFixed(2)}%`}
+                            change={data?.comparison?.conversionRateChange}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'prev. period' : comparisonPeriod.replace('_', ' ')}
                             icon={Target}
                         />
                     </div>

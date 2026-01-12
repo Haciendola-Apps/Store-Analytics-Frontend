@@ -5,9 +5,13 @@ interface DateRange {
     end: string;
 }
 
+export type ComparisonPeriod = 'none' | 'previous_period' | 'last_month' | 'last_year';
+
 interface DateRangeContextType {
     dateRange: DateRange;
     setDateRange: (range: DateRange) => void;
+    comparisonPeriod: ComparisonPeriod;
+    setComparisonPeriod: (period: ComparisonPeriod) => void;
 }
 
 const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
@@ -21,9 +25,10 @@ export const DateRangeProvider = ({ children }: { children: ReactNode }) => {
             end: today.toISOString().split('T')[0]
         };
     });
+    const [comparisonPeriod, setComparisonPeriod] = useState<ComparisonPeriod>('none');
 
     return (
-        <DateRangeContext.Provider value={{ dateRange, setDateRange }}>
+        <DateRangeContext.Provider value={{ dateRange, setDateRange, comparisonPeriod, setComparisonPeriod }}>
             {children}
         </DateRangeContext.Provider>
     );
