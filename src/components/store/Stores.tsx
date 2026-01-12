@@ -9,6 +9,7 @@ import { clsx } from 'clsx';
 export const Stores = () => {
     const { stores, deleteStore, retrySync, updateStore, isLoading } = useStore();
     const [editingStore, setEditingStore] = useState<Store | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     if (isLoading) {
         return <div className="flex items-center justify-center h-64">Loading...</div>;
@@ -21,7 +22,12 @@ export const Stores = () => {
     };
 
     const handleRetry = async (id: string) => {
-        await retrySync(id);
+        setError(null);
+        try {
+            await retrySync(id);
+        } catch (err: any) {
+            setError(err.message || 'Failed to sync store');
+        }
     };
 
     const getStatusIcon = (status: string) => {
@@ -39,6 +45,22 @@ export const Stores = () => {
                 <h1 className="text-3xl font-bold tracking-tight">Store Management</h1>
             </div>
 
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="text-red-500 mt-0.5" size={20} />
+                    <div className="flex-1">
+                        <h3 className="font-semibold text-red-700">Sync Failed</h3>
+                        <p className="text-sm text-red-600 mt-1">{error}</p>
+                    </div>
+                    <button
+                        onClick={() => setError(null)}
+                        className="text-red-500 hover:text-red-700"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
@@ -46,6 +68,7 @@ export const Stores = () => {
                             <tr>
                                 <th className="px-6 py-4">Store Name</th>
                                 <th className="px-6 py-4">URL</th>
+                                <th className="px-6 py-4">Tags</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Last Sync</th>
                                 <th className="px-6 py-4">Reference Period</th>
@@ -64,6 +87,19 @@ export const Stores = () => {
                                     <tr key={store.id} className="hover:bg-secondary/20 transition-colors">
                                         <td className="px-6 py-4 font-medium">{store.name}</td>
                                         <td className="px-6 py-4 text-muted-foreground">{store.url}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-wrap gap-1">
+                                                {store.tags && store.tags.length > 0 ? (
+                                                    store.tags.map(tag => (
+                                                        <span key={tag} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium border border-primary/20">
+                                                            {tag}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-muted-foreground text-xs italic">No tags</span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 {getStatusIcon(store.syncStatus)}

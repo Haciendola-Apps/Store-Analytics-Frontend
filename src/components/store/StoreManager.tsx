@@ -11,6 +11,7 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
     const [url, setUrl] = useState('');
     const [accessToken, setAccessToken] = useState('');
     const [name, setName] = useState('');
+    const [tags, setTags] = useState('');
     const [loading, setLoading] = useState(false);
     const { refreshStores } = useStore();
 
@@ -23,10 +24,13 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
             // Ensure URL doesn't have protocol
             const cleanUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
+            // Process tags
+            const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+
             const response = await fetch('http://localhost:3000/stores', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: cleanUrl, accessToken, name }),
+                body: JSON.stringify({ url: cleanUrl, accessToken, name, tags: tagsArray }),
             });
 
             if (!response.ok) {
@@ -44,6 +48,7 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
             setUrl('');
             setAccessToken('');
             setName('');
+            setTags('');
         } catch (error: any) {
             console.error(error);
             alert(`Error: ${error.message}`);
@@ -99,6 +104,20 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
                         />
                         <p className="text-xs text-muted-foreground">
                             Note: Token must have <code>read_orders</code>, <code>read_products</code> scopes.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Tags (Optional)</label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 rounded-md bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            placeholder="Accesorios Auto, Comida de animales"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Separate tags with commas.
                         </p>
                     </div>
 

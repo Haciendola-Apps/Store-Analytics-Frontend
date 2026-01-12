@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
-import { TrendingUp, ShoppingCart, DollarSign } from 'lucide-react';
+import { TrendingUp, ShoppingCart, DollarSign, Activity, Target } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useDateRange } from '../../context/DateRangeContext';
 
@@ -10,6 +10,10 @@ interface AnalyticsData {
     averageOrderValue: number;
     salesOverTime: { name: string; value: number }[];
     topProducts: { id: string; title: string; totalSales: number }[];
+}
+
+interface SessionMetrics {
+    sessions: { date: string; sessions: number; conversionRate: number | null }[];
 }
 
 const MetricCard = ({ title, value, change, icon: Icon }: any) => (
@@ -39,6 +43,7 @@ export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
     const { dateRange } = useDateRange();
     const [data, setData] = useState<AnalyticsData | null>(null);
+    const [sessionMetrics, setSessionMetrics] = useState<SessionMetrics | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,12 +58,21 @@ export const Analytics = () => {
                     startDate: dateRange.start,
                     endDate: dateRange.end
                 });
+
+                // Fetch analytics data
                 const response = await fetch(`http://localhost:3000/analytics/${selectedStore.id}?${queryParams}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch analytics data');
                 }
                 const result = await response.json();
                 setData(result);
+
+                // Fetch session metrics
+                const sessionResponse = await fetch(`http://localhost:3000/analytics/${selectedStore.id}/sessions?${queryParams}`);
+                if (sessionResponse.ok) {
+                    const sessionResult = await sessionResponse.json();
+                    setSessionMetrics(sessionResult);
+                }
             } catch (err) {
                 console.error('Error fetching analytics:', err);
                 setError('Failed to load analytics data');
@@ -125,6 +139,15 @@ export const Analytics = () => {
 
     const gradientInfo = getGradientOffsets();
 
+    // Calculate session metrics
+    const totalSessions = sessionMetrics?.sessions.reduce((sum, m) => sum + m.sessions, 0) || 0;
+    const avgConversionRate = sessionMetrics?.sessions.length
+        ? (sessionMetrics.sessions
+            .filter(m => m.conversionRate !== null)
+            .reduce((sum, m) => sum + (m.conversionRate || 0), 0) /
+            sessionMetrics.sessions.filter(m => m.conversionRate !== null).length) * 100
+        : 0;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -142,7 +165,7 @@ export const Analytics = () => {
             ) : (
                 <>
                     {/* Metrics Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         <MetricCard
                             title="Total Revenue"
                             value={`$${(data?.totalRevenue ?? 0).toLocaleString()}`}
@@ -160,6 +183,18 @@ export const Analytics = () => {
                             value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             change={null}
                             icon={DollarSign}
+                        />
+                        <MetricCard
+                            title="Total Sessions"
+                            value={totalSessions.toLocaleString()}
+                            change={null}
+                            icon={Activity}
+                        />
+                        <MetricCard
+                            title="Conversion Rate"
+                            value={`${avgConversionRate.toFixed(2)}%`}
+                            change={null}
+                            icon={Target}
                         />
                     </div>
 

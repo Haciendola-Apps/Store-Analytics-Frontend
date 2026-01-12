@@ -13,6 +13,7 @@ interface EditStoreModalProps {
 export const EditStoreModal = ({ store, isOpen, onClose, onSave }: EditStoreModalProps) => {
     const [name, setName] = useState(store.name);
     const [accessToken, setAccessToken] = useState('');
+    const [tags, setTags] = useState(store.tags?.join(', ') || '');
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -20,6 +21,7 @@ export const EditStoreModal = ({ store, isOpen, onClose, onSave }: EditStoreModa
         if (isOpen) {
             setName(store.name);
             setAccessToken(''); // Don't show existing token for security, only allow update
+            setTags(store.tags?.join(', ') || '');
 
         }
     }, [isOpen, store]);
@@ -32,7 +34,7 @@ export const EditStoreModal = ({ store, isOpen, onClose, onSave }: EditStoreModa
         try {
             const updateData: any = {
                 name,
-
+                tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
             };
             if (accessToken) {
                 updateData.accessToken = accessToken;
@@ -78,6 +80,18 @@ export const EditStoreModal = ({ store, isOpen, onClose, onSave }: EditStoreModa
                             className="w-full px-3 py-2 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
                         <p className="text-xs text-muted-foreground">Only enter if you want to update the token.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Tags</label>
+                        <input
+                            type="text"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            placeholder="Accesorios Auto, Comida de animales"
+                            className="w-full px-3 py-2 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                        <p className="text-xs text-muted-foreground">Separate multiple tags with commas.</p>
                     </div>
 
                     <div className="flex justify-end gap-3 mt-6">

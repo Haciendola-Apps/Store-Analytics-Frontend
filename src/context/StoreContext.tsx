@@ -70,7 +70,13 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
     const retrySync = async (id: string) => {
         try {
-            await fetch(`http://localhost:3000/stores/${id}/sync`, { method: 'POST' });
+            const response = await fetch(`http://localhost:3000/stores/${id}/sync`, { method: 'POST' });
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Sync failed');
+            }
+
             await fetchStores();
         } catch (error) {
             console.error('Failed to retry sync:', error);

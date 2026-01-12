@@ -6,4 +6,5 @@ export interface Store {
     lastSyncAt: string | null;
     startDate?: string;
     endDate?: string;
+    tags: string[];
 }
