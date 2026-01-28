@@ -176,12 +176,12 @@ export const Analytics = () => {
                         <select
                             value={benchmarkPeriod}
                             onChange={(e) => setBenchmarkPeriod(e.target.value as any)}
-                            className="bg-transparent text-sm font-medium focus:outline-none pr-2"
+                            className="bg-transparent text-sm font-medium focus:outline-none pr-2 cursor-pointer"
                         >
-                            <option value="ref">Ref. Period</option>
-                            <option value="ref_1">1 Mo Before</option>
-                            <option value="ref_2">2 Mo Before</option>
-                            <option value="ref_3">3 Mo Before</option>
+                            <option value="ref" className="bg-slate-900">Ref. Period</option>
+                            <option value="ref_1" className="bg-slate-900">1 Mo Before</option>
+                            <option value="ref_2" className="bg-slate-900">2 Mo Before</option>
+                            <option value="ref_3" className="bg-slate-900">3 Mo Before</option>
                         </select>
                     </div>
 
@@ -190,12 +190,12 @@ export const Analytics = () => {
                         <select
                             value={comparisonPeriod}
                             onChange={(e) => setComparisonPeriod(e.target.value as any)}
-                            className="bg-transparent text-sm font-medium focus:outline-none pr-2"
+                            className="bg-transparent text-sm font-medium focus:outline-none pr-2 cursor-pointer"
                         >
-                            <option value="none">None</option>
-                            <option value="previous_period">Previous Period</option>
-                            <option value="last_month">Last Month</option>
-                            <option value="last_year">Last Year</option>
+                            <option value="none" className="bg-slate-900">None</option>
+                            <option value="previous_period" className="bg-slate-900">Previous Period</option>
+                            <option value="last_month" className="bg-slate-900">Last Month</option>
+                            <option value="last_year" className="bg-slate-900">Last Year</option>
                         </select>
                     </div>
                 </div>

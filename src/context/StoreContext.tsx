@@ -26,15 +26,19 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
                 const data = await response.json();
                 setStores(data);
 
-                // Update selected store reference if it exists in the new list
-                if (selectedStore) {
-                    const updated = data.find((s: Store) => s.id === selectedStore.id);
-                    if (updated) {
-                        setSelectedStore(updated);
-                    }
-                } else if (data.length > 0 && !selectedStore) {
-                    // Auto-select first store if none selected
+                // Determine target ID:
+                // 1. Current state ID (if we are just refreshing data)
+                // 2. LocalStorage ID (if we are initializing/reloading)
+                const targetId = selectedStore?.id || localStorage.getItem('selectedStoreId');
+
+                const foundStore = data.find((s: Store) => s.id === targetId);
+
+                if (foundStore) {
+                    setSelectedStore(foundStore);
+                } else if (data.length > 0) {
+                    // Fallback to first store if target not found or no selection
                     setSelectedStore(data[0]);
+                    localStorage.setItem('selectedStoreId', data[0].id);
                 }
             }
         } catch (error) {
@@ -52,6 +56,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         const store = stores.find(s => s.id === storeId);
         if (store) {
             setSelectedStore(store);
+            localStorage.setItem('selectedStoreId', storeId);
         }
     };
 
