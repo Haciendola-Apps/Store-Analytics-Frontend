@@ -210,7 +210,7 @@ export const Analytics = () => {
                         />
                         <MetricCard
                             title="Conversion Rate"
-                            value={`${((data?.conversionRate ?? 0) * 100).toFixed(2)}%`}
+                            value={`${(Math.floor((data?.conversionRate ?? 0) * 10) / 10).toFixed(1)}%`}
                             change={data?.comparison?.conversionRateChange}
                             comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
                             icon={Target}
