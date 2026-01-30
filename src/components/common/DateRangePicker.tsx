@@ -5,16 +5,32 @@ import { Calendar } from 'lucide-react';
 import 'react-day-picker/style.css';
 
 interface DateRangePickerProps {
-    value: { start: string; end: string };
+    value: { start?: string | null; end?: string | null };
     onChange: (range: { start: string; end: string }) => void;
+    placeholder?: string;
 }
 
-export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
+export const DateRangePicker = ({ value, onChange, placeholder = "Select dates" }: DateRangePickerProps) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date } | undefined>({
-        from: new Date(value.start),
-        to: new Date(value.end)
+    const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date } | undefined>(() => {
+        if (!value.start || !value.end) return undefined;
+        return {
+            from: new Date(value.start),
+            to: new Date(value.end)
+        };
     });
+
+    // Update selectedRange when value prop changes
+    useEffect(() => {
+        if (value.start && value.end) {
+            setSelectedRange({
+                from: new Date(value.start),
+                to: new Date(value.end)
+            });
+        } else {
+            setSelectedRange(undefined);
+        }
+    }, [value.start, value.end]);
     const [popoverPos, setPopoverPos] = useState<{ top: number; right: number } | null>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -76,10 +92,17 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
     };
 
     const formatDateRange = () => {
+        if (!value.start || !value.end) {
+            return placeholder;
+        }
         // Append T00:00:00 to ensure local time interpretation instead of UTC
-        // This fixes the off-by-one error due to timezone differences
         const start = new Date(`${value.start}T00:00:00`);
         const end = new Date(`${value.end}T00:00:00`);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return placeholder;
+        }
+
         return `${format(start, 'MMM dd, yyyy')} - ${format(end, 'MMM dd, yyyy')}`;
     };
 

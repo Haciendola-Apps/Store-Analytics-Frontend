@@ -6,5 +6,8 @@ export interface Store {
     lastSyncAt: string | null;
     startDate?: string;
     endDate?: string;
+    themeId?: string | null;
+    themeName?: string | null;
+    themeVersion?: string | null;
     tags: string[];
 }

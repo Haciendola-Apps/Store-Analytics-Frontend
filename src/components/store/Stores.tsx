@@ -17,7 +17,9 @@ export const Stores = () => {
         status: '',
         tags: '',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        themeName: '',
+        themeVersion: ''
     });
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -34,7 +36,16 @@ export const Stores = () => {
     };
 
     const clearFilters = () => {
-        setFilters({ name: '', url: '', status: '', tags: '', startDate: '', endDate: '' });
+        setFilters({ 
+            name: '', 
+            url: '', 
+            status: '', 
+            tags: '', 
+            startDate: '', 
+            endDate: '',
+            themeName: '',
+            themeVersion: ''
+        });
         refreshStores({});
     };
 
@@ -120,7 +131,7 @@ export const Stores = () => {
                     <table className="w-full min-w-max text-sm text-left">
                         <thead className="bg-secondary/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4 min-w-[180px]">
+                                <th className="px-4 py-4 min-w-[150px]">
                                     <div className="flex flex-col gap-2">
                                         <span>Store Name</span>
                                         {isFilterVisible && (
@@ -136,7 +147,7 @@ export const Stores = () => {
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 min-w-[240px]">
+                                <th className="px-4 py-4 min-w-[170px]">
                                     <div className="flex flex-col gap-2">
                                         <span>URL</span>
                                         {isFilterVisible && (
@@ -152,7 +163,39 @@ export const Stores = () => {
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 min-w-[140px]">
+                                <th className="px-4 py-4 min-w-[90px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Theme</span>
+                                        {isFilterVisible && (
+                                            <input
+                                                type="text"
+                                                name="themeName"
+                                                value={filters.themeName}
+                                                onChange={handleFilterChange}
+                                                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                                placeholder="Filter..."
+                                                className="w-full bg-background border border-border rounded-md px-2 py-1 text-[10px] font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-4 py-4 min-w-[65px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Ver</span>
+                                        {isFilterVisible && (
+                                            <input
+                                                type="text"
+                                                name="themeVersion"
+                                                value={filters.themeVersion}
+                                                onChange={handleFilterChange}
+                                                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                                placeholder="v..."
+                                                className="w-full bg-background border border-border rounded-md px-1 py-1 text-[10px] font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-4 py-4 min-w-[120px]">
                                     <div className="flex flex-col gap-2">
                                         <span>Tags</span>
                                         {isFilterVisible && (
@@ -168,7 +211,7 @@ export const Stores = () => {
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 min-w-[120px]">
+                                <th className="px-4 py-4 min-w-[110px]">
                                     <div className="flex flex-col gap-2">
                                         <span>Status</span>
                                         {isFilterVisible && (
@@ -195,13 +238,7 @@ export const Stores = () => {
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 min-w-[160px]">
-                                    <div className="flex flex-col gap-2">
-                                        <span>Last Sync</span>
-                                        {isFilterVisible && <div className="h-[26px]" aria-hidden="true" />}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 min-w-[280px]">
+                                <th className="px-4 py-4 min-w-[220px]">
                                     <div className="flex flex-col gap-2">
                                         <span>Reference Period</span>
                                         {isFilterVisible && (
@@ -225,7 +262,7 @@ export const Stores = () => {
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-right min-w-[100px]">
+                                <th className="px-4 py-4 text-right min-w-[100px]">
                                     <div className="flex flex-col gap-2">
                                         <span>Actions</span>
                                         {isFilterVisible && <div className="h-[26px]" aria-hidden="true" />}
@@ -236,7 +273,7 @@ export const Stores = () => {
                         <tbody className="divide-y divide-border">
                             {stores.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                                    <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
                                         {Object.values(filters).some(v => v !== '') 
                                             ? "No stores match your search criteria." 
                                             : "No stores connected yet."}
@@ -245,9 +282,23 @@ export const Stores = () => {
                             ) : (
                                 stores.map((store) => (
                                     <tr key={store.id} className="hover:bg-secondary/20 transition-colors">
-                                        <td className="px-6 py-4 font-medium whitespace-nowrap">{store.name}</td>
-                                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{store.url}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-4 font-medium whitespace-nowrap">{store.name}</td>
+                                        <td className="px-4 py-4 text-muted-foreground whitespace-nowrap">{store.url}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            {store.themeName ? (
+                                                <span className="text-sm font-medium text-primary/80">{store.themeName}</span>
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs italic">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            {store.themeVersion ? (
+                                                <span className="bg-secondary px-2 py-0.5 rounded text-[11px] font-mono">v{store.themeVersion}</span>
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs italic">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-4">
                                             <div className="flex flex-wrap gap-1">
                                                 {store.tags && store.tags.length > 0 ? (
                                                     store.tags.map(tag => (
@@ -260,8 +311,11 @@ export const Stores = () => {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            <div 
+                                                className="flex items-center gap-2 group relative cursor-help"
+                                                title={store.lastSyncAt ? `Last Sync: ${new Date(store.lastSyncAt).toLocaleString()}` : 'Never synced'}
+                                            >
                                                 {getStatusIcon(store.syncStatus)}
                                                 <span className={clsx(
                                                     "capitalize",
@@ -269,24 +323,29 @@ export const Stores = () => {
                                                     store.syncStatus === 'FAILED' && "text-red-600",
                                                     store.syncStatus === 'SYNCING' && "text-blue-600",
                                                 )}>{store.syncStatus.toLowerCase()}</span>
+                                                
+                                                {/* Tooltip detail (secondary way to see it) */}
+                                                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-50">
+                                                    <div className="bg-popover border border-border text-popover-foreground text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap">
+                                                        {store.lastSyncAt ? `Sync: ${new Date(store.lastSyncAt).toLocaleString()}` : 'No sync data'}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
-                                            {store.lastSyncAt ? new Date(store.lastSyncAt).toLocaleString() : '-'}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-4 py-4 whitespace-nowrap">
                                             <DateRangePicker
                                                 value={{
-                                                    start: store.startDate ? new Date(store.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                                                    end: store.endDate ? new Date(store.endDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+                                                    start: store.startDate ? new Date(store.startDate).toISOString().split('T')[0] : null,
+                                                    end: store.endDate ? new Date(store.endDate).toISOString().split('T')[0] : null
                                                 }}
+                                                placeholder="Not set"
                                                 onChange={(range) => updateStore(store.id, {
                                                     startDate: range.start,
                                                     endDate: range.end
                                                 })}
                                             />
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-4 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleRetry(store.id)}

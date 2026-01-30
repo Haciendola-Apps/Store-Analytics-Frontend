@@ -48,7 +48,7 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
             }
 
             // Success
-            alert('Store connected successfully! Data sync started.');
+            alert(accessToken ? 'Store connected successfully! Data sync started.' : 'Store added successfully!');
             onClose();
             // Refresh store list
             await refreshStores();
@@ -80,10 +80,9 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Store Name</label>
+                        <label className="text-sm font-medium">Store Name (Optional)</label>
                         <input
                             type="text"
-                            required
                             className="w-full px-3 py-2 rounded-md bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder="My Awesome Store"
                             value={name}
@@ -104,17 +103,16 @@ export const StoreManager = ({ isOpen, onClose }: StoreManagerProps) => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Access Token</label>
+                        <label className="text-sm font-medium">Access Token (Optional)</label>
                         <input
                             type="password"
-                            required
                             className="w-full px-3 py-2 rounded-md bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder="shpat_..."
                             value={accessToken}
                             onChange={(e) => setAccessToken(e.target.value)}
                         />
                         <p className="text-xs text-muted-foreground">
-                            Note: Token must have <code>read_orders</code>, <code>read_products</code> scopes.
+                            Note: If provided, data sync will start automatically.
                         </p>
                     </div>
 
