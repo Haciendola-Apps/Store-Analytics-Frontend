@@ -7,11 +7,41 @@ import { DateRangePicker } from '../common/DateRangePicker';
 import { clsx } from 'clsx';
 
 export const Stores = () => {
-    const { stores, deleteStore, retrySync, updateStore, isLoading } = useStore();
+    const { stores, deleteStore, retrySync, updateStore, isLoading, refreshStores } = useStore();
     const [editingStore, setEditingStore] = useState<Store | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isFilterVisible, setIsFilterVisible] = useState(true);
+    const [filters, setFilters] = useState({
+        name: '',
+        url: '',
+        status: '',
+        tags: '',
+        startDate: '',
+        endDate: ''
+    });
 
-    if (isLoading) {
+    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value }));
+    };
+
+    const applyFilters = () => {
+        const activeFilters: Record<string, string> = {};
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value) activeFilters[key] = value;
+        });
+        refreshStores(activeFilters);
+    };
+
+    const clearFilters = () => {
+        setFilters({ name: '', url: '', status: '', tags: '', startDate: '', endDate: '' });
+        refreshStores({});
+    };
+
+    // We don't want to show the full-screen loading if we already have stores (e.g. while filtering)
+    const isInitialLoading = isLoading && stores.length === 0;
+
+    if (isInitialLoading) {
         return <div className="flex items-center justify-center h-64">Loading...</div>;
     }
 
@@ -43,6 +73,25 @@ export const Stores = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Store Management</h1>
+                <div className="flex bg-secondary/30 rounded-lg p-1 border border-border">
+                    <button
+                        onClick={() => setIsFilterVisible(!isFilterVisible)}
+                        className={clsx(
+                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                            isFilterVisible ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-secondary text-muted-foreground"
+                        )}
+                    >
+                        Filters
+                    </button>
+                    {(Object.values(filters).some(v => v !== '')) && (
+                        <button
+                            onClick={clearFilters}
+                            className="px-3 py-1.5 text-xs font-medium text-red-500 hover:text-red-400 transition-colors"
+                        >
+                            Reset
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && (
@@ -61,37 +110,148 @@ export const Stores = () => {
                 </div>
             )}
 
-            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-x-auto">
+                <div className="relative">
+                    {isLoading && stores.length > 0 && (
+                        <div className="absolute inset-0 bg-background/40 flex items-center justify-center z-10 backdrop-blur-[1px]">
+                             <RefreshCw size={24} className="text-primary animate-spin" />
+                        </div>
+                    )}
+                    <table className="w-full min-w-max text-sm text-left">
                         <thead className="bg-secondary/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4">Store Name</th>
-                                <th className="px-6 py-4">URL</th>
-                                <th className="px-6 py-4">Tags</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Last Sync</th>
-                                <th className="px-6 py-4">Reference Period</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4 min-w-[180px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Store Name</span>
+                                        {isFilterVisible && (
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                value={filters.name}
+                                                onChange={handleFilterChange}
+                                                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                                placeholder="Filter..."
+                                                className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 min-w-[240px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>URL</span>
+                                        {isFilterVisible && (
+                                            <input
+                                                type="text"
+                                                name="url"
+                                                value={filters.url}
+                                                onChange={handleFilterChange}
+                                                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                                placeholder="Filter..."
+                                                className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 min-w-[140px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Tags</span>
+                                        {isFilterVisible && (
+                                            <input
+                                                type="text"
+                                                name="tags"
+                                                value={filters.tags}
+                                                onChange={handleFilterChange}
+                                                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                                placeholder="Filter..."
+                                                className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                            />
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 min-w-[120px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Status</span>
+                                        {isFilterVisible && (
+                                            <select
+                                                name="status"
+                                                value={filters.status}
+                                                onChange={(e) => {
+                                                    handleFilterChange(e);
+                                                    // Auto-apply for status select
+                                                    const activeFilters: Record<string, string> = {};
+                                                    Object.entries({ ...filters, status: e.target.value }).forEach(([key, value]) => {
+                                                        if (value) activeFilters[key] = value;
+                                                    });
+                                                    refreshStores(activeFilters);
+                                                }}
+                                                className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                                            >
+                                                <option value="">All</option>
+                                                <option value="COMPLETED">Completed</option>
+                                                <option value="SYNCING">Syncing</option>
+                                                <option value="FAILED">Failed</option>
+                                                <option value="PENDING">Pending</option>
+                                            </select>
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 min-w-[160px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Last Sync</span>
+                                        {isFilterVisible && <div className="h-[26px]" aria-hidden="true" />}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 min-w-[280px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Reference Period</span>
+                                        {isFilterVisible && (
+                                            <div className="flex gap-1 items-center h-[26px]">
+                                                <input
+                                                    type="date"
+                                                    name="startDate"
+                                                    value={filters.startDate}
+                                                    onChange={handleFilterChange}
+                                                    className="flex-1 bg-background border border-border rounded-md px-1 py-1 text-[10px] font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                                />
+                                                <span className="text-[10px]">to</span>
+                                                <input
+                                                    type="date"
+                                                    name="endDate"
+                                                    value={filters.endDate}
+                                                    onChange={handleFilterChange}
+                                                    className="flex-1 bg-background border border-border rounded-md px-1 py-1 text-[10px] font-normal text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-right min-w-[100px]">
+                                    <div className="flex flex-col gap-2">
+                                        <span>Actions</span>
+                                        {isFilterVisible && <div className="h-[26px]" aria-hidden="true" />}
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {stores.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                                        No stores connected yet.
+                                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                                        {Object.values(filters).some(v => v !== '') 
+                                            ? "No stores match your search criteria." 
+                                            : "No stores connected yet."}
                                     </td>
                                 </tr>
                             ) : (
                                 stores.map((store) => (
                                     <tr key={store.id} className="hover:bg-secondary/20 transition-colors">
-                                        <td className="px-6 py-4 font-medium">{store.name}</td>
-                                        <td className="px-6 py-4 text-muted-foreground">{store.url}</td>
+                                        <td className="px-6 py-4 font-medium whitespace-nowrap">{store.name}</td>
+                                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{store.url}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-wrap gap-1">
                                                 {store.tags && store.tags.length > 0 ? (
                                                     store.tags.map(tag => (
-                                                        <span key={tag} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium border border-primary/20">
+                                                        <span key={tag} className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-medium border border-primary/20 whitespace-nowrap">
                                                             {tag}
                                                         </span>
                                                     ))
@@ -100,7 +260,7 @@ export const Stores = () => {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
                                                 {getStatusIcon(store.syncStatus)}
                                                 <span className={clsx(
@@ -111,10 +271,10 @@ export const Stores = () => {
                                                 )}>{store.syncStatus.toLowerCase()}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
+                                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
                                             {store.lastSyncAt ? new Date(store.lastSyncAt).toLocaleString() : '-'}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <DateRangePicker
                                                 value={{
                                                     start: store.startDate ? new Date(store.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],

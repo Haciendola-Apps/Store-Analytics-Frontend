@@ -53,7 +53,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <StoreManager isOpen={isStoreManagerOpen} onClose={() => setIsStoreManagerOpen(false)} />
 
                 {/* Sidebar */}
-                <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-xl flex flex-col">
+                <aside className="w-56 border-r border-border bg-card/50 backdrop-blur-xl flex flex-col">
                     <div className="p-6">
                         <div className="flex items-center gap-2 mb-8">
                             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -119,7 +119,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                             </div>
                         </div>
                     </header>
-                    <div className="p-8 max-w-7xl mx-auto">
+                    <div className={clsx("p-8 mx-auto", location.pathname === '/stores' ? "w-full" : "max-w-7xl")}>
                         {children}
                     </div>
                 </main>

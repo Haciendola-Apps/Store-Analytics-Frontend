@@ -5,7 +5,7 @@ interface StoreContextType {
     stores: Store[];
     selectedStore: Store | null;
     selectStore: (storeId: string) => void;
-    refreshStores: () => Promise<void>;
+    refreshStores: (filters?: Record<string, string>) => Promise<void>;
     isLoading: boolean;
     deleteStore: (id: string) => Promise<void>;
     retrySync: (id: string, force?: boolean) => Promise<void>;
@@ -19,24 +19,33 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     const [selectedStore, setSelectedStore] = useState<Store | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchStores = useCallback(async () => {
+    const fetchStores = useCallback(async (filters?: Record<string, string>) => {
         try {
-            const response = await fetch('http://localhost:3000/stores');
+            let url = 'http://localhost:3000/stores';
+            if (filters && Object.keys(filters).length > 0) {
+                const queryParams = new URLSearchParams();
+                Object.entries(filters).forEach(([key, value]) => {
+                    if (value) queryParams.append(key, value);
+                });
+                const queryString = queryParams.toString();
+                if (queryString) url += `?${queryString}`;
+            }
+
+            console.log('Fetching stores from:', url);
+            const response = await fetch(url);
             if (response.ok) {
                 const data = await response.json();
+                console.log(`Fetched ${data.length} stores`);
                 setStores(data);
 
                 // Determine target ID:
-                // 1. Current state ID (if we are just refreshing data)
-                // 2. LocalStorage ID (if we are initializing/reloading)
                 const targetId = selectedStore?.id || localStorage.getItem('selectedStoreId');
-
                 const foundStore = data.find((s: Store) => s.id === targetId);
 
                 if (foundStore) {
                     setSelectedStore(foundStore);
-                } else if (data.length > 0) {
-                    // Fallback to first store if target not found or no selection
+                } else if (data.length > 0 && !selectedStore) {
+                    // Only fallback to first store if no store is currently selected
                     setSelectedStore(data[0]);
                     localStorage.setItem('selectedStoreId', data[0].id);
                 }
