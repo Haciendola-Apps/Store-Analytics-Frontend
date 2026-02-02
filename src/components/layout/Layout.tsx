@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Users, BarChart3, Settings, Plus, LogOut, Calendar } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Settings, Plus, LogOut, Calendar } from 'lucide-react';
 import { clsx } from 'clsx';
 import { StoreManager } from '../store/StoreManager';
-import { StoreProvider } from '../../context/StoreContext';
 import { StoreSelector } from '../store/StoreSelector';
 import { DateRangePicker } from '../common/DateRangePicker';
 import { useDateRange } from '../../context/DateRangeContext';
@@ -40,17 +39,23 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
     const setRefPeriod = () => {
         if (selectedStore?.startDate && selectedStore?.endDate) {
+            const startStr = typeof selectedStore.startDate === 'string' 
+                ? selectedStore.startDate.split('T')[0] 
+                : new Date(selectedStore.startDate).toISOString().split('T')[0];
+            const endStr = typeof selectedStore.endDate === 'string' 
+                ? selectedStore.endDate.split('T')[0] 
+                : new Date(selectedStore.endDate).toISOString().split('T')[0];
+            
             setDateRange({
-                start: selectedStore.startDate.split('T')[0],
-                end: selectedStore.endDate.split('T')[0]
+                start: startStr,
+                end: endStr
             });
         }
     };
 
     return (
-        <StoreProvider>
-            <div className="flex h-screen bg-background text-foreground overflow-hidden">
-                <StoreManager isOpen={isStoreManagerOpen} onClose={() => setIsStoreManagerOpen(false)} />
+        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+            <StoreManager isOpen={isStoreManagerOpen} onClose={() => setIsStoreManagerOpen(false)} />
 
                 {/* Sidebar */}
                 <aside className="w-56 border-r border-border bg-card/50 backdrop-blur-xl flex flex-col">
@@ -64,15 +69,15 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
                         <nav className="space-y-1">
                             <SidebarItem icon={LayoutDashboard} label="Overview" to="/" active={location.pathname === '/'} />
-                            <SidebarItem icon={ShoppingBag} label="Products" to="/products" active={location.pathname === '/products'} />
-                            <SidebarItem icon={Users} label="Customers" to="/customers" active={location.pathname === '/customers'} />
+                            {/* <SidebarItem icon={ShoppingBag} label="Products" to="/products" active={location.pathname === '/products'} /> */}
+                            {/* <SidebarItem icon={Users} label="Customers" to="/customers" active={location.pathname === '/customers'} /> */}
                             <SidebarItem icon={BarChart3} label="Analytics" to="/analytics" active={location.pathname === '/analytics'} />
                         </nav>
                     </div>
 
                     <div className="mt-auto p-6 border-t border-border">
                         <nav className="space-y-1">
-                            <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} />
+                            {/* <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} /> */}
                             <SidebarItem icon={Settings} label="Stores" to="/stores" active={location.pathname === '/stores'} />
                         </nav>
                     </div>
@@ -124,6 +129,5 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                 </main>
             </div>
-        </StoreProvider>
     );
 };
