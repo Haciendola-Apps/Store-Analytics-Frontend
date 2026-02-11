@@ -70,8 +70,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
                         <nav id="sidebar-nav-main" className="space-y-1">
                             <SidebarItem icon={LayoutDashboard} label="Overview" to="/" active={location.pathname === '/'} />
-                            {/* <SidebarItem icon={ShoppingBag} label="Products" to="/products" active={location.pathname === '/products'} /> */}
-                            {/* <SidebarItem icon={Users} label="Customers" to="/customers" active={location.pathname === '/customers'} /> */}
                             <SidebarItem icon={BarChart3} label="Analytics" to="/analytics" active={location.pathname === '/analytics'} />
                             <SidebarItem icon={Zap} label="Quick View" to="/quick-view" active={location.pathname === '/quick-view'} />
                         </nav>
@@ -79,7 +77,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
                     <div className="mt-auto p-6 border-t border-border">
                         <nav id="sidebar-nav-footer" className="space-y-1">
-                            {/* <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} /> */}
                             <SidebarItem icon={Settings} label="Stores" to="/stores" active={location.pathname === '/stores'} />
                         </nav>
                     </div>
@@ -89,22 +86,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <main id="main-content" className="flex-1 overflow-y-auto relative">
                     <header id="top-header" className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 px-8 flex items-center justify-between">
                         <div className="flex items-center gap-6">
-                            <h2 id="header-page-title" className="text-lg font-semibold">Dashboard</h2>
-                            <StoreSelector />
+                            <h2 id="header-page-title" className="text-lg font-semibold">
+                                {location.pathname === '/' ? 'Overview' : 
+                                 location.pathname === '/analytics' ? 'Analytics Detail' : 
+                                 location.pathname === '/quick-view' ? 'Quick View Summary' : 
+                                 location.pathname === '/stores' ? 'Store Management' : 'Dashboard'}
+                            </h2>
                         </div>
                         <div id="header-actions" className="flex items-center gap-4">
-                            {selectedStore?.startDate && selectedStore?.endDate && (
-                                <button
-                                    id="btn-sync-calendar"
-                                    onClick={setRefPeriod}
-                                    className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-secondary/50 transition-colors text-xs font-medium text-muted-foreground"
-                                    title="Set Reference Period"
-                                >
-                                    <Calendar size={14} />
-                                    <span>Program Period</span>
-                                </button>
-                            )}
-                            <DateRangePicker value={dateRange} onChange={setDateRange} />
                             <button
                                 id="btn-add-store"
                                 onClick={() => setIsStoreManagerOpen(true)}
@@ -129,7 +118,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                             </div>
                         </div>
                     </header>
-                    <div id="page-content" className={clsx("p-8 mx-auto", location.pathname === '/stores' ? "w-full" : "max-w-7xl")}>
+                    <div id="page-content" className={clsx("p-8 mx-auto", location.pathname === '/stores' ? "w-full" : "max-w-7xl overflow-visible")}>
                         {children}
                     </div>
                 </main>

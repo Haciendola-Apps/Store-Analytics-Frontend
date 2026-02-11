@@ -8,9 +8,14 @@ interface DateRangePickerProps {
     value: { start?: string | null; end?: string | null };
     onChange: (range: { start: string; end: string }) => void;
     placeholder?: string;
+    secondaryAction?: {
+        label: string;
+        onClick: () => void;
+        icon?: any;
+    };
 }
 
-export const DateRangePicker = ({ value, onChange, placeholder = "Select dates" }: DateRangePickerProps) => {
+export const DateRangePicker = ({ value, onChange, placeholder = "Select dates", secondaryAction }: DateRangePickerProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date } | undefined>(() => {
         if (!value.start || !value.end) return undefined;
@@ -118,7 +123,7 @@ export const DateRangePicker = ({ value, onChange, placeholder = "Select dates" 
                     }
                     setIsOpen(!isOpen);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg hover:bg-secondary/50 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-background/50 border border-border rounded-md hover:bg-secondary/50 transition-colors text-xs font-medium h-[38px]"
             >
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span id="date-range-value-text">{formatDateRange()}</span>
@@ -128,14 +133,28 @@ export const DateRangePicker = ({ value, onChange, placeholder = "Select dates" 
             {isOpen && popoverPos && (
                 <div
                     id="date-range-popover"
-                    className="fixed z-50 bg-[hsl(217.2,32.6%,25%)] border border-border rounded-xl shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200"
+                    className="fixed z-50 bg-[hsl(217.2,32.6%,25%)] border border-border rounded-xl shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200 min-w-[320px]"
                     style={{ top: popoverPos.top, right: popoverPos.right }}
                 >
-                    <div className="mb-3">
-                        <h4 className="text-sm font-semibold mb-1 text-foreground">Select Date Range</h4>
-                        <p className="text-xs text-muted-foreground">
-                            Click start date, then end date
-                        </p>
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <h4 className="text-sm font-semibold text-foreground">Select Date Range</h4>
+                            <p className="text-xs text-muted-foreground">
+                                Click start date, then end date
+                            </p>
+                        </div>
+                        {secondaryAction && (
+                            <button
+                                onClick={() => {
+                                    secondaryAction.onClick();
+                                    setIsOpen(false);
+                                }}
+                                className="flex items-center gap-2 px-2.5 py-1.5 bg-[#FF0057] hover:bg-[#FF0057]/90 text-white rounded-md transition-colors text-[10px] font-bold uppercase tracking-tight shadow-sm shadow-[#FF0057]/20"
+                            >
+                                {secondaryAction.icon && <secondaryAction.icon size={12} />}
+                                {secondaryAction.label}
+                            </button>
+                        )}
                     </div>
 
                     <DayPicker

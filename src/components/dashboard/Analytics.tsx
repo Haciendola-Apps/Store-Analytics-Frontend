@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
-import { TrendingUp, ShoppingCart, DollarSign, Activity, Target } from 'lucide-react';
+import { TrendingUp, ShoppingCart, DollarSign, Activity, Target, Calendar, Info } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useDateRange } from '../../context/DateRangeContext';
+import { StoreSelector } from '../store/StoreSelector';
+import { DateRangePicker } from '../common/DateRangePicker';
 
 interface AnalyticsData {
     totalRevenue: number;
@@ -16,6 +18,17 @@ interface AnalyticsData {
         averageOrderValueChange: number | null;
         totalSessionsChange: number | null;
         conversionRateChange: number | null;
+        range: {
+            start: string;
+            end: string;
+        } | null;
+        values: {
+            totalRevenue: number;
+            totalOrders: number;
+            averageOrderValue: number;
+            totalSessions: number;
+            conversionRate: number;
+        } | null;
     } | null;
     salesOverTime: { name: string; value: number }[];
     topProducts: { id: string; title: string; totalSales: number }[];
@@ -55,10 +68,33 @@ const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon, id }: a
 
 export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
-    const { dateRange, comparisonPeriod, setComparisonPeriod } = useDateRange();
+    const { dateRange, setDateRange, comparisonPeriod, setComparisonPeriod } = useDateRange();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Force comparison to previous_period for this view
+    useEffect(() => {
+        if (comparisonPeriod !== 'previous_period') {
+            setComparisonPeriod('previous_period');
+        }
+    }, [comparisonPeriod, setComparisonPeriod]);
+
+    const setRefPeriod = () => {
+        if (selectedStore?.startDate && selectedStore?.endDate) {
+            const startStr = typeof selectedStore.startDate === 'string' 
+                ? selectedStore.startDate.split('T')[0] 
+                : new Date(selectedStore.startDate).toISOString().split('T')[0];
+            const endStr = typeof selectedStore.endDate === 'string' 
+                ? selectedStore.endDate.split('T')[0] 
+                : new Date(selectedStore.endDate).toISOString().split('T')[0];
+            
+            setDateRange({
+                start: startStr,
+                end: endStr
+            });
+        }
+    };
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -99,13 +135,19 @@ export const Analytics = () => {
 
     if (!selectedStore) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
-                <div className="p-4 bg-secondary/50 rounded-full">
-                    <span className="text-4xl">📊</span>
+            <div className="space-y-8">
+                <div id="analytics-controls" className="flex flex-wrap items-center gap-4 bg-card/30 p-4 rounded-xl border border-border/50">
+                    <StoreSelector />
                 </div>
-                <div>
-                    <h3 className="text-lg font-semibold">No Store Selected</h3>
-                    <p className="text-muted-foreground">Please select a store to view its analytics.</p>
+                
+                <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
+                    <div className="p-4 bg-secondary/50 rounded-full">
+                        <span className="text-4xl">📊</span>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold">No Store Selected</h3>
+                        <p className="text-muted-foreground">Please select a store to view its analytics.</p>
+                    </div>
                 </div>
             </div>
         );
@@ -151,21 +193,74 @@ export const Analytics = () => {
 
     return (
         <div id="analytics-container" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h1 id="analytics-title" className="text-3xl font-bold tracking-tight">Analytics: {selectedStore.name}</h1>
-
+            {/* Analytics Controls Section */}
+            <div id="analytics-controls" className="flex flex-wrap items-center justify-between gap-4 bg-card/30 p-4 rounded-xl border border-border/50">
                 <div className="flex items-center gap-4">
-                    <div id="comparison-selector-container" className="flex items-center gap-2 bg-card border border-border p-1 rounded-lg">
-                        <span className="text-xs font-medium text-muted-foreground px-2 whitespace-nowrap">Compare with:</span>
-                        <select
-                            id="select-comparison-period"
-                            value={comparisonPeriod}
-                            onChange={(e) => setComparisonPeriod(e.target.value as any)}
-                            className="bg-transparent text-sm font-medium focus:outline-none pr-2 cursor-pointer"
-                        >
-                            <option value="none" className="bg-slate-900">None</option>
-                            <option value="previous_period" className="bg-slate-900">Last Period</option>
-                        </select>
+                    <StoreSelector />
+                </div>
+                <div id="date-controls-group" className="flex items-center gap-3">
+                    <DateRangePicker 
+                        value={dateRange} 
+                        onChange={setDateRange} 
+                        secondaryAction={selectedStore?.startDate && selectedStore?.endDate ? {
+                            label: "Set to Reference Period",
+                            onClick: setRefPeriod,
+                            icon: Calendar
+                        } : undefined}
+                    />
+
+                    {/* Period Visualization */}
+                    <div className="hidden lg:flex flex-col items-end mr-2 text-[10px] leading-tight">
+                        <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground font-bold uppercase tracking-wider">Ref Period:</span>
+                            <span className="text-foreground font-medium">
+                                {dateRange.start} <span className="text-muted-foreground/50 mx-0.5 font-normal italic lowercase">to</span> {dateRange.end}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground font-bold uppercase tracking-wider">Compared with:</span>
+                            <span className="font-semibold tracking-tight">
+                                {data?.comparison?.range ? (
+                                    <>
+                                        {data.comparison.range.start} <span className="text-muted-foreground/50 mx-0.5 font-normal italic lowercase">to</span> {data.comparison.range.end}
+                                    </>
+                                ) : '...'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Auto-Calculated Badge with Tooltip */}
+                    <div className="relative group">
+                        <div className="flex items-center gap-1.5 px-3 py-2 bg-primary/5 border border-primary/20 rounded-md text-[10px] font-bold text-primary cursor-help h-[38px] shadow-sm">
+                            <Activity size={12} />
+                            AUTO-CALCULATED
+                        </div>
+                        
+                        {/* Logic Tooltip */}
+                        <div className="absolute right-0 top-full mt-2 w-64 p-4 bg-popover border border-border rounded-xl shadow-2xl text-xs text-popover-foreground invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed">
+                            <div className="space-y-3">
+                                <div className="font-bold text-primary flex items-center gap-2 border-b border-border/50 pb-1 uppercase tracking-tight">
+                                    <Info size={14} />
+                                    Calculation Logic
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">Reference Period:</p>
+                                    <ul className="space-y-1 list-disc list-inside text-muted-foreground">
+                                        <li><span className="text-foreground font-medium">Start Date:</span> Based on your selection or store configuration.</li>
+                                        <li><span className="text-foreground font-medium">End Date:</span> If the selected end is in the future, <span className="italic">today</span> is used to ensure data accuracy.</li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-2 border-t border-border/50 pt-2">
+                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">Comparison Period:</p>
+                                    <p className="text-muted-foreground">
+                                        Calculates the total days in your <span className="text-foreground">Reference Period</span> and automatically looks back the <span className="text-foreground">same duration</span> ending the day before selected Start Date.
+                                    </p>
+                                </div>
+                                <div className="text-[10px] bg-secondary/50 p-2 rounded text-muted-foreground italic">
+                                    Matches the standard methodology for period-over-period Performance Benchmarking.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
