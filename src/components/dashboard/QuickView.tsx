@@ -417,98 +417,170 @@ export const QuickView = () => {
                 />
             </div>
 
-            {/* Stores List Section */}
-            <div id="quickview-stores-section" className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-border bg-secondary/30">
+            {/* Stores List Section - Removed overflow-hidden from card to allow tooltips to escape, added it to table wrapper instead */}
+            <div id="quickview-stores-section" className="bg-card border border-border rounded-xl shadow-sm flex flex-col">
+                <div className="p-4 border-b border-border bg-card rounded-t-xl">
                     <h2 id="quickview-stores-title" className="font-semibold text-lg">Stores Overview</h2>
                 </div>
-                <div className="overflow-x-auto">
+
+                <div className="overflow-x-auto rounded-b-xl pb-32 -mb-32">
                     <table id="quickview-stores-table" className="w-full text-sm text-left">
-                        <thead className="bg-[#0a0c10] text-muted-foreground font-medium border-b border-border">
+                        <thead className="bg-muted/30 text-muted-foreground font-medium border-b border-border uppercase text-xs tracking-wider">
                             <tr>
-                                <th className="px-6 py-3 min-w-[200px]">
-                                    <div className="flex flex-col gap-2">
-                                        <span>Store Name</span>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={quickFilters.name}
-                                            onChange={handleFilterChange}
-                                            placeholder="Ex: Store1, Store2..."
-                                            className="w-full px-3 py-1.5 bg-[#0d1117] border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/30"
-                                        />
+                                <th className="px-6 py-4 font-semibold min-w-[200px] align-top relative z-40">
+                                    <div className="flex flex-col gap-2 group/header">
+                                        <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
+                                            Store Name
+                                            <Info size={12} className="opacity-50" />
+                                        </span>
+                                        <div className="relative">
+                                            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                value={quickFilters.name}
+                                                onChange={handleFilterChange}
+                                                placeholder="Search..."
+                                                className="w-full pl-8 pr-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
+                                            />
+                                        </div>
+                                        {/* Tooltip */}
+                                        <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
+                                            <p className="font-bold mb-1 text-primary">Search by Name</p>
+                                            <p className="text-muted-foreground mb-2">Search across all store names.</p>
+                                            <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-1 border border-white/5">
+                                                <p><span className="font-semibold text-foreground">Single:</span> "Store A"</p>
+                                                <p><span className="font-semibold text-foreground">Multiple:</span> "Store A, Store B"</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </th>
-                                <th className="px-6 py-3 min-w-[250px]">
-                                    <div className="flex flex-col gap-2">
-                                        <span>URL</span>
+                                <th className="px-6 py-4 font-semibold min-w-[200px] align-top relative z-30">
+                                    <div className="flex flex-col gap-2 group/header">
+                                        <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
+                                            URL
+                                            <Info size={12} className="opacity-50" />
+                                        </span>
                                         <input
                                             type="text"
                                             name="url"
                                             value={quickFilters.url}
                                             onChange={handleFilterChange}
-                                            placeholder="Filter..."
-                                            className="w-full px-3 py-1.5 bg-[#0d1117] border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/30"
+                                            placeholder="Filter url..."
+                                            className="w-full px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
                                         />
+                                        <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
+                                            <p className="font-bold mb-1 text-primary">Filter by URL</p>
+                                            <p className="text-muted-foreground mb-2">Partial match on store URLs.</p>
+                                            <div className="bg-secondary/30 p-2 rounded text-[10px] border border-white/5">
+                                                <p><span className="font-semibold text-foreground">Example:</span> "felipe" matches "felipetestcl"</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </th>
-                                <th className="px-6 py-3 min-w-[200px]">
-                                    <div className="flex flex-col gap-2">
-                                        <span>Tags</span>
+                                <th className="px-6 py-4 font-semibold min-w-[150px] align-top relative z-20">
+                                    <div className="flex flex-col gap-2 group/header">
+                                        <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
+                                            Tags
+                                            <Info size={12} className="opacity-50" />
+                                        </span>
                                         <input
                                             type="text"
                                             name="tags"
                                             value={quickFilters.tags}
                                             onChange={handleFilterChange}
-                                            placeholder="Ex: Tag1, Tag2..."
-                                            className="w-full px-3 py-1.5 bg-[#0d1117] border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/30"
+                                            placeholder="Ex: Tag1..."
+                                            className="w-full px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
                                         />
+                                        <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
+                                            <p className="font-bold mb-1 text-primary">Filter by Tags</p>
+                                            <p className="text-muted-foreground mb-2">Search stores containing specific tags.</p>
+                                            <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-1 border border-white/5">
+                                                <p><span className="font-semibold text-foreground">Format:</span> Comma separated</p>
+                                                <p><span className="font-semibold text-foreground">Example:</span> "Electro, Sales"</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </th>
-                                <th className="px-6 py-3 min-w-[150px]">
-                                    <div className="flex flex-col gap-2">
-                                        <span>Success Status</span>
+                                <th className="px-6 py-4 font-semibold min-w-[250px] align-top text-center relative z-10">
+                                    <div className="flex flex-col gap-2 items-center group/header relative">
+                                        <span className="mb-1 flex items-center gap-1.5 cursor-help justify-center w-fit">
+                                            Performance Status
+                                            <Info size={12} className="opacity-50" />
+                                        </span>
                                         <input
                                             type="text"
                                             name="success"
                                             value={quickFilters.success}
                                             onChange={handleFilterChange}
-                                            placeholder="Ex: Alto, Medio..."
-                                            className="w-full px-3 py-1.5 bg-[#0d1117] border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/30"
+                                            placeholder="Filter status..."
+                                            className="w-full max-w-[200px] px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case text-center"
                                         />
+                                        <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none text-left">
+                                            <p className="font-bold mb-1 text-primary">Filter by Status</p>
+                                            <p className="text-muted-foreground mb-2">Filter based on success levels.</p>
+                                            <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-2 border border-white/5">
+                                                <div>
+                                                    <p className="font-semibold mb-1 text-foreground">Available Levels:</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-500 rounded border border-green-500/20">ALTO</span>
+                                                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">MEDIO</span>
+                                                        <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 rounded border border-yellow-500/20">LEVE</span>
+                                                        <span className="px-1.5 py-0.5 bg-muted/50 text-muted-foreground rounded border border-border/50">NINGUNO</span>
+                                                        <span className="px-1.5 py-0.5 bg-red-500/10 text-red-500 rounded border border-red-500/20">NEGATIVO</span>
+                                                    </div>
+                                                </div>
+                                                <p className="italic text-muted-foreground opacity-70">Type any part of the status name to filter.</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="quickview-stores-tbody" className="divide-y divide-border">
+                        <tbody id="quickview-stores-tbody" className="divide-y divide-border/50">
                             {filteredStores.map((store: any) => (
                                 <tr 
                                     id={`quickview-store-row-${store.id}`}
                                     key={store.id} 
                                     onClick={() => selectStore(store.id)}
                                     className={clsx(
-                                        "hover:bg-secondary/50 transition-colors cursor-pointer group",
-                                        selectedStore.id === store.id ? "bg-primary/10" : "hover:bg-secondary/30"
+                                        "transition-all duration-200 cursor-pointer group hover:bg-muted/30",
+                                        selectedStore.id === store.id ? "bg-primary/5 border-l-4 border-l-primary" : "border-l-4 border-l-transparent"
                                     )}
                                 >
-                                    <td className="px-6 py-4 font-medium text-foreground group-hover:text-primary transition-colors">{store.name}</td>
-                                    <td className="px-6 py-4 text-muted-foreground">{store.url}</td>
                                     <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {store.tags?.map((tag: string, i: number) => (
-                                                <span key={i} className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded text-[10px] font-medium">
-                                                    {tag}
-                                                </span>
-                                            ))}
+                                        <div className="font-medium text-foreground group-hover:text-primary transition-colors text-base">
+                                            {store.name}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="text-muted-foreground/70 text-xs font-mono truncate max-w-[200px]">
+                                            {store.url.replace('.myshopify.com', '')}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {store.tags?.map((tag: string, i: number) => (
+                                                <span key={i} className="px-2.5 py-1 bg-secondary/50 text-secondary-foreground border border-border/50 rounded-md text-[10px] font-medium shadow-sm">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                            {(!store.tags || store.tags.length === 0) && (
+                                                <span className="text-muted-foreground/30 text-[10px] italic">No tags</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex gap-2 justify-center">
                                             {store.successLevels ? (
-                                                <>
-                                                    <SuccessBadge level={store.successLevels.fixed} label="Fixed" metrics={store.successData?.metrics} />
-                                                    <SuccessBadge level={store.successLevels.percentage} label="Growth" metrics={store.successData?.metrics} />
-                                                </>
+                                                <div className="flex gap-3">
+                                                    <div className="w-[100px]">
+                                                        <SuccessBadge level={store.successLevels.fixed} label="Fixed" metrics={store.successData?.metrics} />
+                                                    </div>
+                                                    <div className="w-[100px]">
+                                                        <SuccessBadge level={store.successLevels.percentage} label="Growth" metrics={store.successData?.metrics} />
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <span className="text-[10px] text-muted-foreground italic">No data</span>
                                             )}
@@ -518,10 +590,15 @@ export const QuickView = () => {
                             ))}
                             {filteredStores.length === 0 && (
                                 <tr id="quickview-no-stores-row">
-                                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Search size={24} className="opacity-10" />
-                                            <span>No stores found matching your filters.</span>
+                                    <td colSpan={4} className="px-6 py-16 text-center text-muted-foreground">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="p-3 bg-secondary/50 rounded-full">
+                                                <Search size={24} className="opacity-50" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="font-medium text-foreground">No stores found</p>
+                                                <p className="text-xs">Try adjusting your search or filters.</p>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

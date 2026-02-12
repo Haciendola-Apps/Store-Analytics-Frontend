@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Zap, Settings, Plus, LogOut, Calendar } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Zap, Settings, Plus, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
 import { StoreManager } from '../store/StoreManager';
-import { StoreSelector } from '../store/StoreSelector';
-import { DateRangePicker } from '../common/DateRangePicker';
-import { useDateRange } from '../../context/DateRangeContext';
 import { useAuth } from '../../context/AuthContext';
-import { useStore } from '../../context/StoreContext';
 import { useSettings } from '../../context/SettingsContext';
 
 const SidebarItem = ({ icon: Icon, label, to, active }: { icon: any, label: string, to: string, active: boolean }) => (
@@ -29,32 +25,13 @@ const SidebarItem = ({ icon: Icon, label, to, active }: { icon: any, label: stri
 export const Layout = ({ children }: { children: React.ReactNode }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [isStoreManagerOpen, setIsStoreManagerOpen] = useState(false);
-    const { dateRange, setDateRange } = useDateRange();
-    const { logout, user } = useAuth();
-    const { selectedStore } = useStore();
+    const [isStoreManagerOpen, setIsStoreManagerOpen] = useState(false);    
+    const { logout, user } = useAuth();    
     const { settings, updateCurrency } = useSettings();
-
     const handleLogout = () => {
         logout();
         navigate('/login');
-    };
-
-    const setRefPeriod = () => {
-        if (selectedStore?.startDate && selectedStore?.endDate) {
-            const startStr = typeof selectedStore.startDate === 'string' 
-                ? selectedStore.startDate.split('T')[0] 
-                : new Date(selectedStore.startDate).toISOString().split('T')[0];
-            const endStr = typeof selectedStore.endDate === 'string' 
-                ? selectedStore.endDate.split('T')[0] 
-                : new Date(selectedStore.endDate).toISOString().split('T')[0];
-            
-            setDateRange({
-                start: startStr,
-                end: endStr
-            });
-        }
-    };
+    };   
 
     return (
         <div id="app-container" className="flex h-screen bg-background text-foreground overflow-hidden">

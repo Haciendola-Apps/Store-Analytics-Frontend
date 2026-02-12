@@ -23,8 +23,8 @@ export const SuccessBadge = ({ level, label, thresholds, type, metrics, showThre
     const isGrowth = type === 'percentage' || label.toLowerCase().includes('growth');
 
     return (
-        <div className="relative group/badge">
-            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider cursor-help transition-all hover:brightness-110 group-hover/badge:border-primary/50 ${colorClass}`}>
+        <div className="relative group/badge w-full">
+            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider cursor-help transition-all hover:brightness-110 group-hover/badge:border-primary/50 text-center truncate ${colorClass}`}>
                 {label}: {level.toUpperCase()}
             </div>
             
