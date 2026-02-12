@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
 import { TrendingUp, ShoppingCart, DollarSign, Activity, Target, Calendar, Info } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useDateRange } from '../../context/DateRangeContext';
+import { useSettings } from '../../context/SettingsContext';
 import { StoreSelector } from '../store/StoreSelector';
 import { DateRangePicker } from '../common/DateRangePicker';
+import { SuccessCaseBanner } from './SuccessCaseBanner';
+import type { SuccessStatus } from './SuccessCaseBanner';
 
 interface AnalyticsData {
     totalRevenue: number;
@@ -33,28 +36,6 @@ interface AnalyticsData {
     salesOverTime: { name: string; value: number }[];
     topProducts: { id: string; title: string; totalSales: number }[];
 }
-
-interface SuccessStatus {
-    storeName: string;
-    durationInDays: number;
-    periods: {
-        reference: { start: string; end: string; revenue: number };
-        previous: { start: string; end: string; revenue: number };
-    };
-    metrics: {
-        fixedIncrease: number;
-        percentageIncrease: number;
-    };
-    successLevels: {
-        fixed: 'alto' | 'medio' | 'leve' | 'negativo' | 'ninguno';
-        percentage: 'alto' | 'medio' | 'leve' | 'negativo' | 'ninguno';
-    };
-    thresholdsUsed: {
-        fixed: { low: number; medium: number; high: number } | null;
-        percentage: { low: number; medium: number; high: number } | null;
-    };
-}
-
 
 const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon, id }: any) => {
     const isNeutral = change == null || Math.abs(change) < 0.1;
@@ -87,54 +68,10 @@ const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon, id }: a
     );
 };
 
-const SuccessBadge = ({ level, label, thresholds, type }: { level: string, label: string, thresholds?: { low: number, medium: number, high: number } | null, type: 'fixed' | 'percentage' }) => {
-    const colors = {
-        alto: 'bg-green-500/10 text-green-500 border-green-500/20',
-        medio: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        leve: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-        negativo: 'bg-red-500/10 text-red-500 border-red-500/20',
-        ninguno: 'bg-muted text-muted-foreground border-border',
-    };
-
-    const colorClass = colors[level as keyof typeof colors] || colors.ninguno;
-    const isGrowth = type === 'percentage';
-
-    return (
-        <div className="relative group/badge">
-            <div className={`px-2 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider cursor-help transition-all hover:brightness-110 ${colorClass}`}>
-                {label}: {level}
-            </div>
-            
-            {thresholds && (
-                <div className="absolute left-0 bottom-full mb-2 w-48 p-3 bg-popover border border-border rounded-lg shadow-xl text-[10px] text-popover-foreground invisible group-hover/badge:visible opacity-0 group-hover/badge:opacity-100 transition-all z-50 normal-case font-normal">
-                    <p className="font-bold border-b border-border/50 pb-1 mb-2 uppercase tracking-tight">Thresholds ({label})</p>
-                    <div className="space-y-1.5">
-                        <div className="flex justify-between items-center text-green-500 font-medium">
-                            <span>Alto:</span>
-                            <span>{isGrowth ? '+' : '$'}{thresholds.high.toLocaleString()}{isGrowth ? '%' : ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-blue-500 font-medium">
-                            <span>Medio:</span>
-                            <span>{isGrowth ? '+' : '$'}{thresholds.medium.toLocaleString()}{isGrowth ? '%' : ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-yellow-500 font-medium">
-                            <span>Leve:</span>
-                            <span>{isGrowth ? '+' : '$'}{thresholds.low.toLocaleString()}{isGrowth ? '%' : ''}</span>
-                        </div>
-                        <div className="pt-1 mt-1 border-t border-border/30 flex justify-between items-center text-red-500 font-medium">
-                            <span>Negativo:</span>
-                            <span>{isGrowth ? '< 0%' : '< $0'}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
 export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
     const { dateRange, setDateRange, comparisonPeriod, setComparisonPeriod } = useDateRange();
+    const { formatCurrency } = useSettings();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [successStatus, setSuccessStatus] = useState<SuccessStatus | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -353,68 +290,8 @@ export const Analytics = () => {
                 <>
                     {/* Success Case Summary */}
                     {successStatus && (
-                        <div id="success-case-banner" className="bg-[#FF0057]/5 border border-[#FF0057]/20 rounded-xl p-6 relative group">
-                            {/* Background Icon with its own clipping container */}
-                            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-                                <div className="absolute right-0 top-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <Target size={120} className="text-[#FF0057]" />
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-bold text-foreground">Performance Case Analysis</h2>
-                                        <div className="flex gap-2">
-                                            <SuccessBadge 
-                                                level={successStatus.successLevels.fixed} 
-                                                label="Fixed" 
-                                                thresholds={successStatus.thresholdsUsed.fixed}
-                                                type="fixed"
-                                            />
-                                            <SuccessBadge 
-                                                level={successStatus.successLevels.percentage} 
-                                                label="Growth %" 
-                                                thresholds={successStatus.thresholdsUsed.percentage}
-                                                type="percentage"
-                                            />
-                                        </div>
-                                    </div>
-                                    <p className="text-muted-foreground text-sm">
-                                        Comparing <span className="text-foreground font-semibold">{successStatus.durationInDays} days</span> of accompaniment vs previous period.
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-wrap gap-8">
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF0057]">Revenue Increase</span>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-2xl font-black text-foreground">
-                                                ${successStatus.metrics.fixedIncrease.toLocaleString()}
-                                            </span>
-                                            <span className={`text-sm font-bold ${successStatus.metrics.percentageIncrease >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                ({successStatus.metrics.percentageIncrease > 0 ? '+' : ''}{successStatus.metrics.percentageIncrease.toFixed(1)}%)
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="h-10 w-px bg-border/50 hidden md:block"></div>
-
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reference Period Revenue</span>
-                                        <div className="text-sm font-medium text-foreground">
-                                            ${successStatus.periods.reference.revenue.toLocaleString()}
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Previous Period Revenue</span>
-                                        <div className="text-sm font-medium text-foreground">
-                                            ${successStatus.periods.previous.revenue.toLocaleString()}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="mb-8">
+                            <SuccessCaseBanner successStatus={successStatus as any} />
                         </div>
                     )}
 
@@ -423,7 +300,7 @@ export const Analytics = () => {
                         <MetricCard
                             id="analytics-metric-revenue"
                             title="Total Revenue"
-                            value={`$${(data?.totalRevenue ?? 0).toLocaleString()}`}
+                            value={formatCurrency(data?.totalRevenue ?? 0)}
                             change={data?.comparison?.totalRevenueChange}
                             comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
                             icon={DollarSign}
@@ -439,7 +316,7 @@ export const Analytics = () => {
                         <MetricCard
                             id="analytics-metric-aov"
                             title="Average Order Value"
-                            value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            value={formatCurrency(data?.averageOrderValue ?? 0)}
                             change={data?.comparison?.averageOrderValueChange}
                             comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
                             icon={DollarSign}
@@ -496,9 +373,9 @@ export const Analytics = () => {
                                             axisLine={false}
                                             minTickGap={30}
                                         />
-                                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(value)} />
                                         <Tooltip
-                                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Ingresos']}
+                                            formatter={(value: number) => [formatCurrency(value), 'Ingresos']}
                                             labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '8px', fontWeight: 'bold' }}
                                             contentStyle={{
                                                 backgroundColor: 'hsl(var(--card))',
@@ -593,7 +470,7 @@ export const Analytics = () => {
                                                         {/* Sales Amount */}
                                                         <div id={`top-product-sales-${product.id}`} className="text-right flex-shrink-0">
                                                             <p className="font-semibold text-sm">
-                                                                ${product.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                {formatCurrency(product.totalSales)}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground">
                                                                 {percentage.toFixed(0)}%

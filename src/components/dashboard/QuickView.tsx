@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, ShoppingCart, DollarSign, Activity, Target, Calendar, Info, Search } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { useSettings } from '../../context/SettingsContext';
 import { clsx } from 'clsx';
+import { SuccessBadge } from './SuccessBadge';
+import { SuccessCaseBanner } from './SuccessCaseBanner';
+import type { SuccessStatus } from './SuccessCaseBanner';
 
 interface AnalyticsData {
     totalRevenue: number;
@@ -29,7 +33,8 @@ interface AnalyticsData {
     } | null;
 }
 
-const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRange, prevRange, prefix = '', suffix = '' }: any) => {
+const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRange, prevRange, prefix = '', suffix = '', isCurrency = false }: any) => {
+    const { formatCurrency } = useSettings();
     const isNeutral = change == null || Math.abs(change) < 0.1;
     const isPositive = change != null && change > 0;
     const colorClass = isNeutral ? 'text-foreground/70' : (isPositive ? 'text-green-500' : 'text-red-500');
@@ -77,7 +82,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
                                 </div>
                                 <div className="text-[10px] text-muted-foreground mb-1 italic">{prevRange}</div>
                                 <div className="font-bold text-sm bg-secondary/30 px-2 py-1 rounded inline-block text-muted-foreground">
-                                    {prefix}{prevValue?.toLocaleString()}{suffix}
+                                    {isCurrency ? formatCurrency(prevValue || 0) : `${prefix}${prevValue?.toLocaleString()}${suffix}`}
                                 </div>
                             </div>
 
@@ -94,73 +99,12 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
     );
 };
 
-const SuccessBadge = ({ level, label, mini = false, metrics }: { level: string, label: string, mini?: boolean, metrics?: any }) => {
-    const colors = {
-        alto: 'bg-green-500/10 text-green-500 border-green-500/20',
-        medio: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        leve: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-        negativo: 'bg-red-500/10 text-red-500 border-red-500/20',
-        ninguno: 'bg-muted/50 text-muted-foreground border-border/50',
-    };
-
-    const colorClass = colors[level as keyof typeof colors] || colors.ninguno;
-
-    return (
-        <div className="relative group/badge">
-            <div className={`px-2 py-0.5 rounded-md border text-[9px] font-bold uppercase tracking-wider cursor-help transition-all group-hover/badge:border-primary/50 ${colorClass}`}>
-                <span className="opacity-50 mr-1">{label}</span>
-                {level}
-            </div>
-
-            {/* Detailed Tooltip */}
-            {metrics && (
-                <div className="absolute right-0 bottom-full mb-2 w-64 p-4 bg-popover border border-border rounded-xl shadow-2xl text-[11px] text-popover-foreground invisible group-hover/badge:visible opacity-0 group-hover/badge:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                            <span className="font-bold text-primary uppercase tracking-tighter">{label} Analysis</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${colorClass}`}>{level}</span>
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Reference Increase:</span>
-                                <span className="font-bold text-foreground">
-                                    {label === 'Fixed' 
-                                        ? `$${metrics.fixedIncrease.toLocaleString()}` 
-                                        : `${metrics.percentageIncrease.toFixed(1)}%`}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center text-[10px]">
-                                <span className="text-muted-foreground">Duration:</span>
-                                <span className="text-foreground font-medium">{metrics.durationInDays} days</span>
-                            </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-border/50 space-y-1 text-[10px]">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground italic">Current Period Rev:</span>
-                                <span className="text-foreground">${metrics.currentRevenue.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground italic">Previous Period Rev:</span>
-                                <span className="text-foreground">${metrics.prevRevenue.toLocaleString()}</span>
-                            </div>
-                        </div>
-
-                        <div className="bg-secondary/30 p-2 rounded text-[9px] text-muted-foreground italic">
-                            Compares current accompaniment duration vs same duration prior to start date.
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
 export const QuickView = () => {
     const { selectedStore, stores, selectStore } = useStore();
+    const { formatCurrency } = useSettings();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [allSuccessStatuses, setAllSuccessStatuses] = useState<any[]>([]);
+    const [selectedStoreSuccessStatus, setSelectedStoreSuccessStatus] = useState<SuccessStatus | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const [viewDates, setViewDates] = useState({ start: '', end: '' });
@@ -276,10 +220,22 @@ export const QuickView = () => {
                 });
 
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-                const response = await fetch(`${apiUrl}/analytics/${selectedStore.id}?${queryParams}`);
-                if (!response.ok) throw new Error('Failed to fetch analytics');
-                const result = await response.json();
+                
+                // Fetch both analytics and specific success status in parallel
+                const [analyticsRes, successRes] = await Promise.all([
+                    fetch(`${apiUrl}/analytics/${selectedStore.id}?${queryParams}`),
+                    fetch(`${apiUrl}/analytics/success-status/${selectedStore.id}`)
+                ]);
+
+                if (!analyticsRes.ok) throw new Error('Failed to fetch analytics');
+                if (!successRes.ok) console.warn('Failed to fetch store success status');
+
+                const result = await analyticsRes.json();
+                const successResult = successRes.ok ? await successRes.json() : null;
+
                 setData(result);
+                setSelectedStoreSuccessStatus(successResult);
+
                 if (result.comparison?.range) {
                     setCompDates({
                         start: result.comparison.range.start,
@@ -383,18 +339,25 @@ export const QuickView = () => {
                 </div>
             </div>
 
+            {/* Performance Case Analysis Banner */}
+            {selectedStoreSuccessStatus && (
+                <div className="mb-8">
+                    <SuccessCaseBanner successStatus={selectedStoreSuccessStatus} />
+                </div>
+            )}
+
             {/* Metrics Grid */}
             <div id="quickview-metrics-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <MetricCard
                     id="metric-revenue"
                     title="Total Revenue"
-                    value={`$${(data?.totalRevenue ?? 0).toLocaleString()}`}
+                    value={formatCurrency(data?.totalRevenue ?? 0)}
                     change={data?.comparison?.totalRevenueChange}
                     icon={DollarSign}
                     prevValue={data?.comparison?.values?.totalRevenue}
                     currentRange={viewDates.start && viewDates.end ? `${viewDates.start} to ${viewDates.end}` : ''}
                     prevRange={compDates.start && compDates.end ? `${compDates.start} to ${compDates.end}` : ''}
-                    prefix="$"
+                    isCurrency={true}
                 />
                 <MetricCard
                     id="metric-orders"
@@ -409,13 +372,13 @@ export const QuickView = () => {
                 <MetricCard
                     id="metric-aov"
                     title="Average Order Value"
-                    value={`$${(data?.averageOrderValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    value={formatCurrency(data?.averageOrderValue ?? 0)}
                     change={data?.comparison?.averageOrderValueChange}
                     icon={Target}
                     prevValue={data?.comparison?.values?.averageOrderValue}
                     currentRange={viewDates.start && viewDates.end ? `${viewDates.start} to ${viewDates.end}` : ''}
                     prevRange={compDates.start && compDates.end ? `${compDates.start} to ${compDates.end}` : ''}
-                    prefix="$"
+                    isCurrency={true}
                 />
                 <MetricCard
                     id="metric-sessions"
