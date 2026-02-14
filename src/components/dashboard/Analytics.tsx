@@ -59,7 +59,7 @@ const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon, id }: a
                         <div className={`flex items-center gap-1 mt-1 text-sm ${colorClass} font-medium`}>
                             {change > 0 ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />}
                             <span>{change > 0 ? '+' : ''}{parseFloat(change.toString()).toFixed(1)}%</span>
-                            <span className="text-muted-foreground ml-1 text-xs">vs {comparisonLabel}</span>
+                            <span className="text-muted-foreground ml-1 text-xs">{comparisonLabel}</span>
                         </div>
                     )}
                 </div>
@@ -71,7 +71,7 @@ const MetricCard = ({ title, value, change, comparisonLabel, icon: Icon, id }: a
 export const Analytics = () => {
     const { selectedStore, isLoading: isStoreLoading } = useStore();
     const { dateRange, setDateRange, comparisonPeriod, setComparisonPeriod } = useDateRange();
-    const { formatCurrency } = useSettings();
+    const { formatCurrency, t } = useSettings();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [successStatus, setSuccessStatus] = useState<SuccessStatus | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -170,8 +170,8 @@ export const Analytics = () => {
                         <span className="text-4xl">📊</span>
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold">No Store Selected</h3>
-                        <p className="text-muted-foreground">Please select a store to view its analytics.</p>
+                        <h3 className="text-lg font-semibold">{t('analytics.noStore.title')}</h3>
+                        <p className="text-muted-foreground">{t('analytics.noStore.desc')}</p>
                     </div>
                 </div>
             </div>
@@ -228,7 +228,7 @@ export const Analytics = () => {
                         value={dateRange} 
                         onChange={setDateRange} 
                         secondaryAction={selectedStore?.startDate && selectedStore?.endDate ? {
-                            label: "Set to Reference Period",
+                            label: t('period.setToRef'),
                             onClick: setRefPeriod,
                             icon: Calendar
                         } : undefined}
@@ -237,13 +237,13 @@ export const Analytics = () => {
                     {/* Period Visualization */}
                     <div className="hidden lg:flex flex-col items-end mr-2 text-[10px] leading-tight">
                         <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground font-bold uppercase tracking-wider">Ref Period:</span>
+                            <span className="text-muted-foreground font-bold uppercase tracking-wider">{t('period.reference')}:</span>
                             <span className="text-foreground font-medium">
                                 {dateRange.start} <span className="text-muted-foreground/50 mx-0.5 font-normal italic lowercase">to</span> {dateRange.end}
                             </span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground font-bold uppercase tracking-wider">Compared with:</span>
+                            <span className="text-muted-foreground font-bold uppercase tracking-wider">{t('metric.comparedWith')}:</span>
                             <span className="font-semibold tracking-tight">
                                 {data?.comparison?.range ? (
                                     <>
@@ -258,7 +258,7 @@ export const Analytics = () => {
                     <div className="relative group">
                         <div className="flex items-center gap-1.5 px-3 py-2 bg-primary/5 border border-primary/20 rounded-md text-[10px] font-bold text-primary cursor-help h-[38px] shadow-sm">
                             <Activity size={12} />
-                            AUTO-CALCULATED
+                            {t('period.autoCalculated').toUpperCase()}
                         </div>
                         
                         {/* Logic Tooltip */}
@@ -266,23 +266,23 @@ export const Analytics = () => {
                             <div className="space-y-3">
                                 <div className="font-bold text-primary flex items-center gap-2 border-b border-border/50 pb-1 uppercase tracking-tight">
                                     <Info size={14} />
-                                    Calculation Logic
+                                    {t('period.calculationLogic')}
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">Reference Period:</p>
+                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">{t('tooltip.autoCalc.refDesc')}</p>
                                     <ul className="space-y-1 list-disc list-inside text-muted-foreground">
-                                        <li><span className="text-foreground font-medium">Start Date:</span> Based on your selection or store configuration.</li>
-                                        <li><span className="text-foreground font-medium">End Date:</span> If the selected end is in the future, <span className="italic">today</span> is used to ensure data accuracy.</li>
+                                        <li>{t('tooltip.autoCalc.refStart')}</li>
+                                        <li>{t('tooltip.autoCalc.refEnd')}</li>
                                     </ul>
                                 </div>
                                 <div className="space-y-2 border-t border-border/50 pt-2">
-                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">Comparison Period:</p>
+                                    <p className="font-semibold text-foreground underline decoration-primary/30 underline-offset-2">{t('tooltip.autoCalc.compDesc')}</p>
                                     <p className="text-muted-foreground">
-                                        Calculates the total days in your <span className="text-foreground">Reference Period</span> and automatically looks back the <span className="text-foreground">same duration</span> ending the day before selected Start Date.
+                                        {t('tooltip.autoCalc.compLogic')}
                                     </p>
                                 </div>
                                 <div className="text-[10px] bg-secondary/50 p-2 rounded text-muted-foreground italic">
-                                    Matches the standard methodology for period-over-period Performance Benchmarking.
+                                    {t('tooltip.autoCalc.methodology')}
                                 </div>
                             </div>
                         </div>
@@ -311,42 +311,42 @@ export const Analytics = () => {
                     <div id="analytics-metrics-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         <MetricCard
                             id="analytics-metric-revenue"
-                            title="Total Revenue"
+                            title={t('metric.revenue')}
                             value={formatCurrency(data?.totalRevenue ?? 0)}
                             change={data?.comparison?.totalRevenueChange}
-                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? `${t('common.vs')} ${t('analytics.lastPeriod')}` : ''}
                             icon={DollarSign}
                         />
                         <MetricCard
                             id="analytics-metric-orders"
-                            title="Total Orders"
+                            title={t('metric.orders')}
                             value={(data?.totalOrders ?? 0).toLocaleString()}
                             change={data?.comparison?.totalOrdersChange}
-                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? `${t('common.vs')} ${t('analytics.lastPeriod')}` : ''}
                             icon={ShoppingCart}
                         />
                         <MetricCard
                             id="analytics-metric-aov"
-                            title="Average Order Value"
+                            title={t('metric.aov')}
                             value={formatCurrency(data?.averageOrderValue ?? 0)}
                             change={data?.comparison?.averageOrderValueChange}
-                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? `${t('common.vs')} ${t('analytics.lastPeriod')}` : ''}
                             icon={DollarSign}
                         />
                         <MetricCard
                             id="analytics-metric-sessions"
-                            title="Total Sessions"
+                            title={t('metric.sessions')}
                             value={(data?.totalSessions ?? 0).toLocaleString()}
                             change={data?.comparison?.totalSessionsChange}
-                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? `${t('common.vs')} ${t('analytics.lastPeriod')}` : ''}
                             icon={Activity}
                         />
                         <MetricCard
                             id="analytics-metric-conversion"
-                            title="Conversion Rate"
+                            title={t('metric.conversion')}
                             value={`${(Math.floor((data?.conversionRate ?? 0) * 10) / 10).toFixed(1)}%`}
                             change={data?.comparison?.conversionRateChange}
-                            comparisonLabel={comparisonPeriod === 'previous_period' ? 'last period' : ''}
+                            comparisonLabel={comparisonPeriod === 'previous_period' ? `${t('common.vs')} ${t('analytics.lastPeriod')}` : ''}
                             icon={Target}
                         />
                     </div>
@@ -355,7 +355,7 @@ export const Analytics = () => {
                     <div id="analytics-charts-grid" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Main Chart */}
                         <div id="analytics-revenue-chart-container" className="lg:col-span-2 bg-card border border-border rounded-xl p-6 shadow-sm">
-                            <h3 className="text-lg font-semibold mb-6">Revenue Overview</h3>
+                            <h3 className="text-lg font-semibold mb-6">{t('analytics.revenueOverview')}</h3>
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart 
@@ -387,7 +387,7 @@ export const Analytics = () => {
                                         />
                                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(value)} />
                                         <Tooltip
-                                            formatter={(value: number) => [formatCurrency(value), 'Ingresos']}
+                                            formatter={(value: number) => [formatCurrency(value), t('metric.revenue')]}
                                             labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '8px', fontWeight: 'bold' }}
                                             contentStyle={{
                                                 backgroundColor: 'hsl(var(--card))',
@@ -437,15 +437,15 @@ export const Analytics = () => {
 
                         {/* Top Products */}
                         <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col min-h-[400px]">
-                            <h3 className="text-lg font-semibold mb-6">Top Products</h3>
+                            <h3 className="text-lg font-semibold mb-6">{t('analytics.topProducts')}</h3>
                             <div className="flex-1 space-y-3 overflow-y-auto pr-1">
                                 {(!data?.topProducts || data.topProducts.filter(p => p.totalSales > 0).length === 0) ? (
                                     <div className="h-full flex flex-col items-center justify-center py-8 text-center bg-secondary/10 rounded-xl border border-dashed border-border">
                                         <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mb-3">
                                             <ShoppingCart className="w-8 h-8 text-muted-foreground" />
                                         </div>
-                                        <p className="text-muted-foreground text-sm">No products found</p>
-                                        <p className="text-xs text-muted-foreground mt-1">Try selecting a different date range</p>
+                                        <p className="text-muted-foreground text-sm">{t('analytics.noProducts')}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{t('analytics.tryAdjustingDate')}</p>
                                     </div>
                                 ) : (
                                     data.topProducts

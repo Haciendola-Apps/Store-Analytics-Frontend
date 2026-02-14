@@ -10,7 +10,7 @@ interface SuccessBadgeProps {
 }
 
 export const SuccessBadge = ({ level, label, thresholds, type, metrics, showThresholds = false }: SuccessBadgeProps) => {
-    const { formatCurrency } = useSettings();
+    const { formatCurrency, t } = useSettings();
     const colors = {
         alto: 'bg-green-500/10 text-green-500 border-green-500/20',
         medio: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
@@ -31,22 +31,22 @@ export const SuccessBadge = ({ level, label, thresholds, type, metrics, showThre
             {/* Analytics Style Tooltip (Thresholds) */}
             {showThresholds && thresholds && (
                 <div className="absolute left-0 bottom-full mb-2 w-48 p-3 bg-popover border border-border rounded-lg shadow-xl text-[10px] text-popover-foreground invisible group-hover/badge:visible opacity-0 group-hover/badge:opacity-100 transition-all z-50 normal-case font-normal pointer-events-none">
-                    <p className="font-bold border-b border-border/50 pb-1 mb-2 uppercase tracking-tight">Thresholds ({label})</p>
+                    <p className="font-bold border-b border-border/50 pb-1 mb-2 uppercase tracking-tight">{t('badge.thresholds')} ({label})</p>
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center text-green-500 font-medium">
-                            <span>Alto:</span>
+                            <span>{t('level.high')}:</span>
                             <span>{isGrowth ? '+' : ''}{isGrowth ? thresholds.high : formatCurrency(thresholds.high)}{isGrowth ? '%' : ''}</span>
                         </div>
                         <div className="flex justify-between items-center text-blue-500 font-medium">
-                            <span>Medio:</span>
+                            <span>{t('level.medium')}:</span>
                             <span>{isGrowth ? '+' : ''}{isGrowth ? thresholds.medium : formatCurrency(thresholds.medium)}{isGrowth ? '%' : ''}</span>
                         </div>
                         <div className="flex justify-between items-center text-yellow-500 font-medium">
-                            <span>Leve:</span>
+                            <span>{t('level.low')}:</span>
                             <span>{isGrowth ? '+' : ''}{isGrowth ? thresholds.low : formatCurrency(thresholds.low)}{isGrowth ? '%' : ''}</span>
                         </div>
                         <div className="pt-1 mt-1 border-t border-border/30 flex justify-between items-center text-red-500 font-medium">
-                            <span>Negativo:</span>
+                            <span>{t('level.negative')}:</span>
                             <span>{isGrowth ? '< 0%' : `< ${formatCurrency(0)}`}</span>
                         </div>
                     </div>
@@ -58,13 +58,13 @@ export const SuccessBadge = ({ level, label, thresholds, type, metrics, showThre
                 <div className="absolute right-0 bottom-full mb-2 w-64 p-4 bg-popover border border-border rounded-xl shadow-2xl text-[11px] text-popover-foreground invisible group-hover/badge:visible opacity-0 group-hover/badge:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                            <span className="font-bold text-primary uppercase tracking-tighter">{label} Analysis</span>
+                            <span className="font-bold text-primary uppercase tracking-tighter">{label} {t('badge.analysis')}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${colorClass}`}>{level}</span>
                         </div>
                         
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Reference Increase:</span>
+                                <span className="text-muted-foreground">{t('badge.refIncrease')}:</span>
                                 <span className="font-bold text-foreground">
                                     {label.toLowerCase().includes('fixed') 
                                         ? formatCurrency(metrics.fixedIncrease)
@@ -72,24 +72,24 @@ export const SuccessBadge = ({ level, label, thresholds, type, metrics, showThre
                                 </span>
                             </div>
                             <div className="flex justify-between items-center text-[10px]">
-                                <span className="text-muted-foreground">Duration:</span>
+                                <span className="text-muted-foreground">{t('badge.duration')}:</span>
                                 <span className="text-foreground font-medium">{metrics.durationInDays} days</span>
                             </div>
                         </div>
 
                         <div className="pt-2 border-t border-border/50 space-y-1 text-[10px]">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground italic">Current Period Rev:</span>
+                                <span className="text-muted-foreground italic">{t('badge.currPeriodRev')}:</span>
                                 <span className="text-foreground">{formatCurrency(metrics.currentRevenue)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground italic">Previous Period Rev:</span>
+                                <span className="text-muted-foreground italic">{t('badge.prevPeriodRev')}:</span>
                                 <span className="text-foreground">{formatCurrency(metrics.prevRevenue)}</span>
                             </div>
                         </div>
 
                         <div className="bg-secondary/30 p-2 rounded text-[9px] text-muted-foreground italic">
-                            Compares current accompaniment duration vs same duration prior to start date.
+                            {t('badge.compareDesc')}
                         </div>
                     </div>
                 </div>

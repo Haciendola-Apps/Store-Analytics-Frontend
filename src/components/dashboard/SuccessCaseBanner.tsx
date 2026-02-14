@@ -28,7 +28,7 @@ interface SuccessCaseBannerProps {
 }
 
 export const SuccessCaseBanner = ({ successStatus }: SuccessCaseBannerProps) => {
-    const { formatCurrency } = useSettings();
+    const { formatCurrency, t } = useSettings();
 
     if (!successStatus) return null;
 
@@ -44,11 +44,11 @@ export const SuccessCaseBanner = ({ successStatus }: SuccessCaseBannerProps) => 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-foreground">Performance Case Analysis</h2>
+                        <h2 className="text-xl font-bold text-foreground">{t('banner.performanceAnalysis')}</h2>
                         <div className="flex gap-2">
                             <SuccessBadge 
                                 level={successStatus.successLevels.fixed} 
-                                label="Fixed" 
+                                label={t('status.fixed')} 
                                 thresholds={successStatus.thresholdsUsed.fixed}
                                 type="fixed"
                                 metrics={successStatus.metrics}
@@ -56,7 +56,7 @@ export const SuccessCaseBanner = ({ successStatus }: SuccessCaseBannerProps) => 
                             />
                             <SuccessBadge 
                                 level={successStatus.successLevels.percentage} 
-                                label="Growth %" 
+                                label={t('status.growth')} 
                                 thresholds={successStatus.thresholdsUsed.percentage}
                                 type="percentage"
                                 metrics={successStatus.metrics}
@@ -65,13 +65,13 @@ export const SuccessCaseBanner = ({ successStatus }: SuccessCaseBannerProps) => 
                         </div>
                     </div>
                     <p className="text-muted-foreground text-sm">
-                        Comparing <span className="text-foreground font-semibold">{successStatus.durationInDays} days</span> of accompaniment vs previous period.
+                        {t('banner.comparing')} <span className="text-foreground font-semibold">{successStatus.durationInDays}</span> {t('banner.daysOfAccompaniment')}
                     </p>
                 </div>
 
                 <div className="flex flex-wrap gap-8">
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF0057]">Revenue Increase</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#FF0057]">{t('banner.revenueIncrease')}</span>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-black text-foreground">
                                 {formatCurrency(successStatus.metrics.fixedIncrease)}
@@ -85,14 +85,14 @@ export const SuccessCaseBanner = ({ successStatus }: SuccessCaseBannerProps) => 
                     <div className="h-10 w-px bg-border/50 hidden md:block"></div>
 
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reference Period Revenue</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('banner.refRevenue')}</span>
                         <div className="text-sm font-medium text-foreground">
                             {formatCurrency(successStatus.periods.reference.revenue)}
                         </div>
                     </div>
                     
                     <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Previous Period Revenue</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('banner.prevRevenue')}</span>
                         <div className="text-sm font-medium text-foreground">
                             {formatCurrency(successStatus.periods.previous.revenue)}
                         </div>

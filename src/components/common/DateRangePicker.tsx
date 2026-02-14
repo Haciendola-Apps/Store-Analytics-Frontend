@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Calendar } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 import 'react-day-picker/style.css';
 
 interface DateRangePickerProps {
@@ -16,6 +18,7 @@ interface DateRangePickerProps {
 }
 
 export const DateRangePicker = ({ value, onChange, placeholder = "Select dates", secondaryAction }: DateRangePickerProps) => {
+    const { settings } = useSettings();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date } | undefined>(() => {
         if (!value.start || !value.end) return undefined;
@@ -132,6 +135,7 @@ export const DateRangePicker = ({ value, onChange, placeholder = "Select dates",
             {/* Popover */}
             {isOpen && popoverPos && (
                 <div
+                    ref={popoverRef}
                     id="date-range-popover"
                     className="fixed z-50 bg-[hsl(217.2,32.6%,25%)] border border-border rounded-xl shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200 min-w-[320px]"
                     style={{ top: popoverPos.top, right: popoverPos.right }}
@@ -158,6 +162,7 @@ export const DateRangePicker = ({ value, onChange, placeholder = "Select dates",
                     </div>
 
                     <DayPicker
+                        locale={settings.language === 'es' ? es : undefined}
                         mode="range"
                         selected={selectedRange as any}
                         onSelect={handleSelect as any}

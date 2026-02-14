@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import type { UserSettings, SettingsContextType } from '../types/settings.types';
+import { translations, type Language, type TranslationKey } from '../i18n/translations';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -11,12 +12,21 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     // Initialize from localStorage for immediate visual consistency
     const [settings, setSettings] = useState<UserSettings>(() => {
         const savedCurrency = localStorage.getItem('user_currency');
+        const savedLanguage = localStorage.getItem('user_language') as Language;
         return { 
             currency: savedCurrency || 'CLP', 
+            language: savedLanguage || 'en',
             preferences: {} 
         };
     });
     const [isLoading, setIsLoading] = useState(true);
+
+    // Helper for translations
+    const t = useCallback((key: TranslationKey): string => {
+        const lang = settings.language || 'en';
+        // Fallback to English if translation missing in current language
+        return translations[lang][key] || translations['en'][key] || key;
+    }, [settings.language]);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -40,9 +50,14 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
                 if (res.ok) {
                     const data = await res.json();
-                    setSettings({ currency: data.currency, preferences: data.preferences });
+                    setSettings({ 
+                        currency: data.currency || 'CLP', 
+                        language: (data.language as Language) || 'en',
+                        preferences: data.preferences 
+                    });
                     // Sync localStorage with server truth
-                    localStorage.setItem('user_currency', data.currency);
+                    localStorage.setItem('user_currency', data.currency || 'CLP');
+                    localStorage.setItem('user_language', data.language || 'en');
                 }
             } catch (err) {
                 console.error('Failed to fetch settings', err);
@@ -89,7 +104,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 console.log('Server update successful');
                 const data = await res.json();
                 // Ensure state matches server exactly
-                setSettings({ currency: data.currency, preferences: data.preferences });
+                setSettings({ currency: data.currency, language: data.language as Language, preferences: data.preferences });
             }
         } catch (err) {
             console.error('Network error during update:', err);
@@ -97,6 +112,42 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem('user_currency', previousCurrency);
         }
     }, [token, settings.currency]);
+
+    const updateLanguage = useCallback(async (newLanguage: Language) => {
+        const previousLanguage = settings.language;
+        
+        // Optimistic Update
+        setSettings(prev => ({ ...prev, language: newLanguage }));
+        localStorage.setItem('user_language', newLanguage);
+
+        const activeToken = token || localStorage.getItem('auth_token');
+
+        if (!activeToken) return;
+
+        try {
+            const res = await fetch(`${API_URL}/users/settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${activeToken}`
+                },
+                body: JSON.stringify({ language: newLanguage })
+            });
+
+            if (!res.ok) {
+                // Revert
+                setSettings(prev => ({ ...prev, language: previousLanguage }));
+                localStorage.setItem('user_language', previousLanguage);
+            } else {
+                const data = await res.json();
+                setSettings(prev => ({ ...prev, language: data.language as Language }));
+            }
+        } catch (err) {
+            console.error('Network error during language update:', err);
+            setSettings(prev => ({ ...prev, language: previousLanguage }));
+            localStorage.setItem('user_language', previousLanguage);
+        }
+    }, [token, settings.language]);
 
     const formatCurrency = useCallback((amount: number | string) => {
         const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -120,10 +171,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
     const value = useMemo(() => ({ 
         settings, 
-        updateCurrency, 
+        updateCurrency,
+        updateLanguage, 
         isLoading, 
-        formatCurrency 
-    }), [settings, updateCurrency, isLoading, formatCurrency]);
+        formatCurrency,
+        t 
+    }), [settings, updateCurrency, updateLanguage, isLoading, formatCurrency, t]);
 
     return (
         <SettingsContext.Provider value={value}>

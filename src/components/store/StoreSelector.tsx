@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { useSettings } from '../../context/SettingsContext';
 import { CheckCircle2, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const StoreSelector = () => {
     const { stores, selectedStore, selectStore, refreshStores, retrySync } = useStore();
+    const { t } = useSettings();
 
     // Poll for status updates if current store is syncing
     useEffect(() => {
@@ -42,9 +44,9 @@ export const StoreSelector = () => {
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case 'COMPLETED': return 'Synced';
-            case 'SYNCING': return 'Syncing...';
-            case 'FAILED': return 'Sync Failed';
+            case 'COMPLETED': return t('status.synced');
+            case 'SYNCING': return t('status.syncing');
+            case 'FAILED': return t('status.failed');
             default: return 'Pending';
         }
     };
@@ -52,7 +54,7 @@ export const StoreSelector = () => {
     return (
         <div id="store-selector-container" className="flex items-center gap-3 bg-card border border-border rounded-lg px-3 py-2 shadow-sm">
             <div className="flex flex-col">
-                <label id="store-selector-label" className="text-xs text-muted-foreground font-medium mb-0.5">Current Store</label>
+                <label id="store-selector-label" className="text-xs text-muted-foreground font-medium mb-0.5">{t('selector.currentStore')}</label>
                 <select
                     id="select-active-store"
                     value={selectedStore?.id || ''}

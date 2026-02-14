@@ -34,7 +34,7 @@ interface AnalyticsData {
 }
 
 const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRange, prevRange, prefix = '', suffix = '', isCurrency = false }: any) => {
-    const { formatCurrency } = useSettings();
+    const { formatCurrency, t } = useSettings();
     const isNeutral = change == null || Math.abs(change) < 0.1;
     const isPositive = change != null && change > 0;
     const colorClass = isNeutral ? 'text-foreground/70' : (isPositive ? 'text-green-500' : 'text-red-500');
@@ -57,7 +57,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
                         <span>{change > 0 ? '+' : ''}{parseFloat(change.toString()).toFixed(1)}%</span>
                     </div>
                     <span className="text-muted-foreground font-normal ml-1 cursor-help flex items-center gap-1">
-                        vs last period
+                        {t('metric.vsLastPeriod')}
                         <Info size={12} className="opacity-50" />
                     </span>
 
@@ -67,7 +67,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
                             <div>
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-primary" />
-                                    <span className="font-semibold text-foreground uppercase text-[10px]">Reference Period</span>
+                                    <span className="font-semibold text-foreground uppercase text-[10px]">{t('period.reference')}</span>
                                 </div>
                                 <div className="text-[10px] text-muted-foreground mb-1 italic">{currentRange}</div>
                                 <div className="font-bold text-sm bg-secondary/30 px-2 py-1 rounded inline-block">
@@ -78,7 +78,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
                             <div className="border-t border-border/50 pt-2">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-                                    <span className="font-semibold text-foreground uppercase text-[10px]">Previous Period</span>
+                                    <span className="font-semibold text-foreground uppercase text-[10px]">{t('period.previous')}</span>
                                 </div>
                                 <div className="text-[10px] text-muted-foreground mb-1 italic">{prevRange}</div>
                                 <div className="font-bold text-sm bg-secondary/30 px-2 py-1 rounded inline-block text-muted-foreground">
@@ -89,7 +89,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
                             <div className={`pt-2 border-t border-border/50 flex items-center gap-1 font-bold ${colorClass}`}>
                                 {change > 0 ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />}
                                 <span>{Math.abs(parseFloat(change.toString())).toFixed(1)}%</span>
-                                <span className="text-muted-foreground font-normal ml-1 italic text-[10px]">from comparison</span>
+                                <span className="text-muted-foreground font-normal ml-1 italic text-[10px]">{t('metric.fromComparison')}</span>
                             </div>
                         </div>
                     </div>
@@ -101,7 +101,7 @@ const MetricCard = ({ title, value, change, icon: Icon, id, prevValue, currentRa
 
 export const QuickView = () => {
     const { selectedStore, stores, selectStore } = useStore();
-    const { formatCurrency } = useSettings();
+    const { formatCurrency, t } = useSettings();
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [allSuccessStatuses, setAllSuccessStatuses] = useState<any[]>([]);
     const [selectedStoreSuccessStatus, setSelectedStoreSuccessStatus] = useState<SuccessStatus | null>(null);
@@ -297,8 +297,8 @@ export const QuickView = () => {
                     <span className="text-4xl">⚡</span>
                 </div>
                 <div>
-                    <h3 className="text-lg font-semibold">No Store Selected</h3>
-                    <p className="text-muted-foreground">Select a store to see the quick view.</p>
+                    <h3 className="text-lg font-semibold">{t('quickview.noSelect.title')}</h3>
+                    <p className="text-muted-foreground">{t('quickview.noSelect.desc')}</p>
                 </div>
             </div>
         );
@@ -313,14 +313,14 @@ export const QuickView = () => {
             )}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                    <h1 id="quickview-title" className="text-2xl font-bold tracking-tight">Quick View: {selectedStore.name}</h1>
+                    <h1 id="quickview-title" className="text-2xl font-bold tracking-tight">{t('quickview.header')}: {selectedStore.name}</h1>
                     <div id="quickview-date-info" className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar size={14} />
                         <span>
-                            Ref Period: <span className="font-medium text-foreground">{viewDates.start}</span> to <span className="font-medium text-foreground">{viewDates.end}</span>
+                            {t('period.reference')}: <span className="font-medium text-foreground">{viewDates.start}</span> to <span className="font-medium text-foreground">{viewDates.end}</span>
                             {compDates.start && compDates.end && (
                                 <>
-                                    <span className="mx-1 italic">compared with</span>
+                                    <span className="mx-1 italic">{t('metric.comparedWith')}</span>
                                     <span className="font-medium text-foreground">{compDates.start}</span> to <span className="font-medium text-foreground">{compDates.end}</span>
                                 </>
                             )}
@@ -328,12 +328,12 @@ export const QuickView = () => {
                         
                         <div id="auto-calculate-badge" className="group relative flex items-center">
                             <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider cursor-help flex items-center gap-1">
-                                Auto-Calculated
+                                {t('period.autoCalculated')}
                                 <Info size={10} />
                             </span>
                             
                             <div className="absolute left-0 top-full mt-2 w-80 p-4 bg-popover border border-border rounded-lg shadow-xl text-xs text-popover-foreground invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed">
-                                <p className="font-bold border-b border-border pb-1 mb-2 text-primary">Calculation Logic</p>
+                                <p className="font-bold border-b border-border pb-1 mb-2 text-primary">{t('period.calculationLogic')}</p>
                                 <div className="space-y-3">
                                     <div className="space-y-1">
                                         <p className="font-semibold text-foreground">Reference Period:</p>
@@ -364,7 +364,7 @@ export const QuickView = () => {
             <div id="quickview-metrics-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <MetricCard
                     id="metric-revenue"
-                    title="Total Revenue"
+                    title={t('metric.revenue')}
                     value={formatCurrency(data?.totalRevenue ?? 0)}
                     change={data?.comparison?.totalRevenueChange}
                     icon={DollarSign}
@@ -375,7 +375,7 @@ export const QuickView = () => {
                 />
                 <MetricCard
                     id="metric-orders"
-                    title="Total Orders"
+                    title={t('metric.orders')}
                     value={(data?.totalOrders ?? 0).toLocaleString()}
                     change={data?.comparison?.totalOrdersChange}
                     icon={ShoppingCart}
@@ -385,7 +385,7 @@ export const QuickView = () => {
                 />
                 <MetricCard
                     id="metric-aov"
-                    title="Average Order Value"
+                    title={t('metric.aov')}
                     value={formatCurrency(data?.averageOrderValue ?? 0)}
                     change={data?.comparison?.averageOrderValueChange}
                     icon={Target}
@@ -396,7 +396,7 @@ export const QuickView = () => {
                 />
                 <MetricCard
                     id="metric-sessions"
-                    title="Total Sessions"
+                    title={t('metric.sessions')}
                     value={(data?.totalSessions ?? 0).toLocaleString()}
                     change={data?.comparison?.totalSessionsChange}
                     icon={Activity}
@@ -406,7 +406,7 @@ export const QuickView = () => {
                 />
                 <MetricCard
                     id="metric-conversion"
-                    title="Conversion Rate"
+                    title={t('metric.conversion')}
                     value={`${(data?.conversionRate ?? 0).toFixed(1)}%`}
                     change={data?.comparison?.conversionRateChange}
                     icon={TrendingUp}
@@ -420,7 +420,7 @@ export const QuickView = () => {
             {/* Stores List Section - Removed overflow-hidden from card to allow tooltips to escape, added it to table wrapper instead */}
             <div id="quickview-stores-section" className="bg-card border border-border rounded-xl shadow-sm flex flex-col">
                 <div className="p-4 border-b border-border bg-card rounded-t-xl">
-                    <h2 id="quickview-stores-title" className="font-semibold text-lg">Stores Overview</h2>
+                    <h2 id="quickview-stores-title" className="font-semibold text-lg">{t('quickview.title')}</h2>
                 </div>
 
                 <div className="overflow-x-auto rounded-b-xl pb-32 -mb-32">
@@ -430,7 +430,7 @@ export const QuickView = () => {
                                 <th className="px-6 py-4 font-semibold min-w-[200px] align-top relative z-40">
                                     <div className="flex flex-col gap-2 group/header">
                                         <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
-                                            Store Name
+                                            {t('table.storeName')}
                                             <Info size={12} className="opacity-50" />
                                         </span>
                                         <div className="relative">
@@ -440,14 +440,14 @@ export const QuickView = () => {
                                                 name="name"
                                                 value={quickFilters.name}
                                                 onChange={handleFilterChange}
-                                                placeholder="Search..."
+                                                placeholder={t('quickview.search.placeholder')}
                                                 className="w-full pl-8 pr-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
                                             />
                                         </div>
                                         {/* Tooltip */}
                                         <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
-                                            <p className="font-bold mb-1 text-primary">Search by Name</p>
-                                            <p className="text-muted-foreground mb-2">Search across all store names.</p>
+                                            <p className="font-bold mb-1 text-primary">{t('tooltip.searchName')}</p>
+                                            <p className="text-muted-foreground mb-2">{t('tooltip.searchNameDesc')}</p>
                                             <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-1 border border-white/5">
                                                 <p><span className="font-semibold text-foreground">Single:</span> "Store A"</p>
                                                 <p><span className="font-semibold text-foreground">Multiple:</span> "Store A, Store B"</p>
@@ -458,7 +458,7 @@ export const QuickView = () => {
                                 <th className="px-6 py-4 font-semibold min-w-[200px] align-top relative z-30">
                                     <div className="flex flex-col gap-2 group/header">
                                         <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
-                                            URL
+                                            {t('table.url')}
                                             <Info size={12} className="opacity-50" />
                                         </span>
                                         <input
@@ -470,8 +470,8 @@ export const QuickView = () => {
                                             className="w-full px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
                                         />
                                         <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
-                                            <p className="font-bold mb-1 text-primary">Filter by URL</p>
-                                            <p className="text-muted-foreground mb-2">Partial match on store URLs.</p>
+                                            <p className="font-bold mb-1 text-primary">{t('tooltip.filterUrl')}</p>
+                                            <p className="text-muted-foreground mb-2">{t('tooltip.filterUrlDesc')}</p>
                                             <div className="bg-secondary/30 p-2 rounded text-[10px] border border-white/5">
                                                 <p><span className="font-semibold text-foreground">Example:</span> "felipe" matches "felipetestcl"</p>
                                             </div>
@@ -481,7 +481,7 @@ export const QuickView = () => {
                                 <th className="px-6 py-4 font-semibold min-w-[150px] align-top relative z-20">
                                     <div className="flex flex-col gap-2 group/header">
                                         <span className="mb-1 flex items-center gap-1.5 cursor-help w-fit">
-                                            Tags
+                                            {t('table.tags')}
                                             <Info size={12} className="opacity-50" />
                                         </span>
                                         <input
@@ -493,8 +493,8 @@ export const QuickView = () => {
                                             className="w-full px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case"
                                         />
                                         <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none">
-                                            <p className="font-bold mb-1 text-primary">Filter by Tags</p>
-                                            <p className="text-muted-foreground mb-2">Search stores containing specific tags.</p>
+                                            <p className="font-bold mb-1 text-primary">{t('tooltip.filterTags')}</p>
+                                            <p className="text-muted-foreground mb-2">{t('tooltip.filterTagsDesc')}</p>
                                             <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-1 border border-white/5">
                                                 <p><span className="font-semibold text-foreground">Format:</span> Comma separated</p>
                                                 <p><span className="font-semibold text-foreground">Example:</span> "Electro, Sales"</p>
@@ -505,7 +505,7 @@ export const QuickView = () => {
                                 <th className="px-6 py-4 font-semibold min-w-[250px] align-top text-center relative z-10">
                                     <div className="flex flex-col gap-2 items-center group/header relative">
                                         <span className="mb-1 flex items-center gap-1.5 cursor-help justify-center w-fit">
-                                            Performance Status
+                                            {t('table.performance')}
                                             <Info size={12} className="opacity-50" />
                                         </span>
                                         <input
@@ -517,17 +517,17 @@ export const QuickView = () => {
                                             className="w-full max-w-[200px] px-3 py-1.5 bg-background border border-border/50 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 font-normal normal-case text-center"
                                         />
                                         <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-[#0f1115] border border-border/60 rounded-lg shadow-2xl text-xs text-popover-foreground invisible group-hover/header:visible opacity-0 group-hover/header:opacity-100 transition-all z-50 normal-case font-normal leading-relaxed pointer-events-none text-left">
-                                            <p className="font-bold mb-1 text-primary">Filter by Status</p>
-                                            <p className="text-muted-foreground mb-2">Filter based on success levels.</p>
+                                            <p className="font-bold mb-1 text-primary">{t('tooltip.filterStatus')}</p>
+                                            <p className="text-muted-foreground mb-2">{t('tooltip.filterStatusDesc')}</p>
                                             <div className="bg-secondary/30 p-2 rounded text-[10px] space-y-2 border border-white/5">
                                                 <div>
-                                                    <p className="font-semibold mb-1 text-foreground">Available Levels:</p>
+                                                    <p className="font-semibold mb-1 text-foreground">{t('tooltip.availableLevels')}</p>
                                                     <div className="flex flex-wrap gap-1">
-                                                        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-500 rounded border border-green-500/20">ALTO</span>
-                                                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">MEDIO</span>
-                                                        <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 rounded border border-yellow-500/20">LEVE</span>
-                                                        <span className="px-1.5 py-0.5 bg-muted/50 text-muted-foreground rounded border border-border/50">NINGUNO</span>
-                                                        <span className="px-1.5 py-0.5 bg-red-500/10 text-red-500 rounded border border-red-500/20">NEGATIVO</span>
+                                                        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-500 rounded border border-green-500/20">{t('level.high')}</span>
+                                                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20">{t('level.medium')}</span>
+                                                        <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 rounded border border-yellow-500/20">{t('level.low')}</span>
+                                                        <span className="px-1.5 py-0.5 bg-muted/50 text-muted-foreground rounded border border-border/50">{t('level.none')}</span>
+                                                        <span className="px-1.5 py-0.5 bg-red-500/10 text-red-500 rounded border border-red-500/20">{t('level.negative')}</span>
                                                     </div>
                                                 </div>
                                                 <p className="italic text-muted-foreground opacity-70">Type any part of the status name to filter.</p>
@@ -596,8 +596,8 @@ export const QuickView = () => {
                                                 <Search size={24} className="opacity-50" />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="font-medium text-foreground">No stores found</p>
-                                                <p className="text-xs">Try adjusting your search or filters.</p>
+                                                <p className="font-medium text-foreground">{t('table.noStores')}</p>
+                                                <p className="text-xs">{t('table.tryAdjusting')}</p>
                                             </div>
                                         </div>
                                     </td>

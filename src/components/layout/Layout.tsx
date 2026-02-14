@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Zap, Settings, Plus, LogOut } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Zap, Settings, Plus, LogOut, Globe } from 'lucide-react';
 import { clsx } from 'clsx';
 import { StoreManager } from '../store/StoreManager';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 
-const SidebarItem = ({ icon: Icon, label, to, active }: { icon: any, label: string, to: string, active: boolean }) => (
+const SidebarItem = ({ icon: Icon, label, to, active, id }: { icon: any, label: string, to: string, active: boolean, id?: string }) => (
     <Link
-        id={`sidebar-item-${label.toLowerCase().replace(/\s+/g, '-')}`}
+        id={id || `sidebar-item-${to.replace('/', '') || 'home'}`}
         to={to}
         className={clsx(
             "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
@@ -27,11 +27,22 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     const navigate = useNavigate();
     const [isStoreManagerOpen, setIsStoreManagerOpen] = useState(false);    
     const { logout, user } = useAuth();    
-    const { settings, updateCurrency } = useSettings();
+    const { settings, updateCurrency, updateLanguage, t } = useSettings();
+
     const handleLogout = () => {
         logout();
         navigate('/login');
     };   
+
+    const getPageTitle = () => {
+        switch (location.pathname) {
+            case '/': return t('nav.dashboard');
+            case '/analytics': return t('nav.analytics');
+            case '/quick-view': return t('quickview.title');
+            case '/stores': return t('nav.stores');
+            default: return t('nav.dashboard');
+        }
+    };
 
     return (
         <div id="app-container" className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -51,15 +62,15 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                         </div>
 
                         <nav id="sidebar-nav-main" className="space-y-1">
-                            <SidebarItem icon={LayoutDashboard} label="Overview" to="/" active={location.pathname === '/'} />
-                            <SidebarItem icon={BarChart3} label="Analytics" to="/analytics" active={location.pathname === '/analytics'} />
-                            <SidebarItem icon={Zap} label="Quick View" to="/quick-view" active={location.pathname === '/quick-view'} />
+                            <SidebarItem icon={LayoutDashboard} label={t('nav.dashboard')} to="/" active={location.pathname === '/'} />
+                            <SidebarItem icon={BarChart3} label={t('nav.analytics')} to="/analytics" active={location.pathname === '/analytics'} />
+                            <SidebarItem icon={Zap} label={t('quickview.title')} to="/quick-view" active={location.pathname === '/quick-view'} />
                         </nav>
                     </div>
 
                     <div className="mt-auto p-6 border-t border-border">
                         <nav id="sidebar-nav-footer" className="space-y-1">
-                            <SidebarItem icon={Settings} label="Stores" to="/stores" active={location.pathname === '/stores'} />
+                            <SidebarItem icon={Settings} label={t('nav.stores')} to="/stores" active={location.pathname === '/stores'} />
                         </nav>
                     </div>
                 </aside>
@@ -69,13 +80,23 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     <header id="top-header" className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10 px-8 flex items-center justify-between">
                         <div className="flex items-center gap-6">
                             <h2 id="header-page-title" className="text-lg font-semibold">
-                                {location.pathname === '/' ? 'Overview' : 
-                                 location.pathname === '/analytics' ? 'Analytics Detail' : 
-                                 location.pathname === '/quick-view' ? 'Quick View Summary' : 
-                                 location.pathname === '/stores' ? 'Store Management' : 'Dashboard'}
+                                {getPageTitle()}
                             </h2>
                         </div>
                         <div id="header-actions" className="flex items-center gap-4">
+                            {/* Language Selector */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-md bg-card/50">
+                                <Globe size={14} className="text-muted-foreground" />
+                                <select
+                                    value={settings.language}
+                                    onChange={(e) => updateLanguage(e.target.value as any)}
+                                    className="bg-transparent text-sm font-bold focus:outline-none cursor-pointer uppercase"
+                                >
+                                    <option value="en">EN</option>
+                                    <option value="es">ES</option>
+                                </select>
+                            </div>
+
                             <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-md bg-card/50">
                                 <span className="text-xs text-muted-foreground font-medium">Currency</span>
                                 <select
@@ -93,7 +114,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium shadow-lg shadow-primary/20"
                             >
                                 <Plus size={16} />
-                                Add Store
+                                {t('header.addStore')}
                             </button>
                             <div id="user-info-container" className="flex items-center gap-3 px-4 py-2 border border-border rounded-md bg-card/50">
                                 <div className="flex flex-col">
@@ -104,7 +125,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                                     id="btn-logout"
                                     onClick={handleLogout}
                                     className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-md transition-colors"
-                                    title="Logout"
+                                    title={t('nav.logout')}
                                 >
                                     <LogOut size={18} />
                                 </button>
